@@ -1,0 +1,60 @@
+[project]
+name = "pdesolver-backend"
+version = "0.1.0"
+description = "Symbolic PDE solver with step-by-step pedagogical output."
+requires-python = ">=3.11"
+
+dependencies = [
+    "sympy>=1.12",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "mpmath>=1.3",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "pydantic>=2.6",
+    "sqlalchemy>=2.0",
+    "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "httpx>=0.27",
+    "ruff>=0.4",
+]
+# Reserved for later phases — kept here so install commands stay stable.
+vision = [
+    "opencv-python>=4.9",
+    "Pillow>=10.0",
+    "pdf2image>=1.17",
+    # "pix2tex>=0.1",  # pulled in by vision.Dockerfile in Phase 4
+    # "transformers>=4.40",
+    # "torch>=2.2",
+    # "easyocr>=1.7",
+    # "pytesseract>=0.3",
+]
+llm = [
+    "anthropic>=0.25",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]

@@ -1,0 +1,54 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+    container_name: pdesolver-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./data/pdesolver.db
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - ./backend:/app
+      - backend_data:/app/data
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend.Dockerfile
+    container_name: pdesolver-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0
+
+  # ---------------------------------------------------------------------
+  # Vision microservice — heavy PyTorch + pix2tex container.
+  # Deliberately defined but disabled until Phase 4.
+  # Uncomment when you reach the vision pipeline implementation.
+  # ---------------------------------------------------------------------
+  # vision:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: ../docker/vision.Dockerfile
+  #   container_name: pdesolver-vision
+  #   ports:
+  #     - "8001:8001"
+  #   environment:
+  #     - MATHPIX_API_KEY=${MATHPIX_API_KEY:-}
+  #     - MATHPIX_APP_ID=${MATHPIX_APP_ID:-}
+  #   volumes:
+  #     - ./backend:/app
+  #     - vision_models:/root/.cache
+
+volumes:
+  backend_data:
+  # vision_models:
