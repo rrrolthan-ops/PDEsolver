@@ -7,9 +7,11 @@ from .problem import (
     PDEProblem,
 )
 from .solution import DetailLevel, SolutionResponse, Step, StepKind
+from .vision import Confidence, VisionExtractionResult
 
 __all__ = [
     "BoundaryCondition",
+    "Confidence",
     "DetailLevel",
     "Domain",
     "InitialCondition",
@@ -17,4 +19,5 @@ __all__ = [
     "SolutionResponse",
     "Step",
     "StepKind",
+    "VisionExtractionResult",
 ]

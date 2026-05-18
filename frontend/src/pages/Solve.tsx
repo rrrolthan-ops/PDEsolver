@@ -6,9 +6,12 @@ import type {
   InitialCondition,
   PDEProblem,
   SolutionResponse,
+  VisionExtractionResult,
 } from "../api/types";
 import { DetailSlider, shouldShow } from "../components/DetailSlider";
 import { HeatPlot } from "../components/HeatPlot";
+import { ImageUpload } from "../components/ImageUpload";
+import { KatexBlock } from "../components/KatexBlock";
 import { LatexEditor } from "../components/LatexEditor";
 import { NaturalLanguageInput } from "../components/NaturalLanguageInput";
 import { StepCard } from "../components/StepCard";
@@ -25,7 +28,7 @@ const DEFAULT_PROBLEM: PDEProblem = {
   parameters: { alpha: "positive", L: "positive" },
 };
 
-type InputMode = "write" | "natural";
+type InputMode = "write" | "natural" | "image";
 
 interface PendingNL {
   problem: PDEProblem;
@@ -54,6 +57,11 @@ export function Solve({ mode }: Props) {
 
   // Natural-language: a parsed problem waiting for user confirmation.
   const [pendingNL, setPendingNL] = useState<PendingNL | null>(null);
+
+  // Image extraction: parsed problem + transcription + preview.
+  const [pendingImage, setPendingImage] = useState<VisionExtractionResult | null>(
+    null,
+  );
 
   const buildManualProblem = (): PDEProblem => {
     const bcs: BoundaryCondition[] = [
@@ -89,23 +97,34 @@ export function Solve({ mode }: Props) {
   const handleSolvePending = () => {
     if (pendingNL) handleSolve(pendingNL.problem);
   };
+  const handleSolvePendingImage = () => {
+    if (pendingImage) handleSolve(pendingImage.problem);
+  };
 
-  const handleEditPending = () => {
-    if (!pendingNL) return;
-    // Push the parsed problem into the manual editor for hand-tuning.
-    setEquation(pendingNL.problem.equation_latex);
-    const dx = pendingNL.problem.domain.x;
+  const pushIntoManualEditor = (problem: PDEProblem) => {
+    setEquation(problem.equation_latex);
+    const dx = problem.domain.x;
     if (dx) {
       setXLow(dx[0]);
       setXHigh(dx[1]);
     }
-    const bc0 = pendingNL.problem.boundary_conditions[0];
-    const bc1 = pendingNL.problem.boundary_conditions[1];
+    const bc0 = problem.boundary_conditions[0];
+    const bc1 = problem.boundary_conditions[1];
     if (bc0) setBcLeft(bc0.value);
     if (bc1) setBcRight(bc1.value);
-    const ic0 = pendingNL.problem.initial_conditions[0];
+    const ic0 = problem.initial_conditions[0];
     if (ic0) setInitial(ic0.value);
+  };
+
+  const handleEditPending = () => {
+    if (!pendingNL) return;
+    pushIntoManualEditor(pendingNL.problem);
     setPendingNL(null);
+  };
+  const handleEditPendingImage = () => {
+    if (!pendingImage) return;
+    pushIntoManualEditor(pendingImage.problem);
+    setPendingImage(null);
   };
 
   const visibleSteps =
@@ -113,6 +132,20 @@ export function Solve({ mode }: Props) {
 
   // What to render in the left column depends on the active tab.
   const leftPanel = useMemo(() => {
+    if (mode === "image") {
+      if (pendingImage) {
+        return (
+          <ImageConfirmationPanel
+            extraction={pendingImage}
+            onSolve={handleSolvePendingImage}
+            onEdit={handleEditPendingImage}
+            onDiscard={() => setPendingImage(null)}
+            loading={loading}
+          />
+        );
+      }
+      return <ImageUpload onExtracted={setPendingImage} />;
+    }
     if (mode === "natural") {
       if (pendingNL) {
         return (
@@ -155,7 +188,7 @@ export function Solve({ mode }: Props) {
       />
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, pendingNL, equation, xLow, xHigh, bcLeft, bcRight, initial, detail, loading]);
+  }, [mode, pendingNL, pendingImage, equation, xLow, xHigh, bcLeft, bcRight, initial, detail, loading]);
 
   return (
     <div>
@@ -177,9 +210,11 @@ export function Solve({ mode }: Props) {
             </>
           ) : (
             <p style={{ color: "var(--text-muted)" }}>
-              {mode === "natural"
-                ? "Describe el problema a la izquierda y pulsa Interpretar. Después podrás confirmar la interpretación antes de resolver."
-                : "Configura el problema a la izquierda y pulsa Resolver. Verás la solución, la superficie u(x, t) y la convergencia."}
+              {mode === "image"
+                ? "Sube una foto del problema. Verás la imagen y la transcripción lado a lado para confirmar antes de resolver."
+                : mode === "natural"
+                  ? "Describe el problema a la izquierda y pulsa Interpretar. Después podrás confirmar la interpretación antes de resolver."
+                  : "Configura el problema a la izquierda y pulsa Resolver. Verás la solución, la superficie u(x, t) y la convergencia."}
             </p>
           )}
         </section>
@@ -424,4 +459,158 @@ function describeDomain(p: PDEProblem): string {
     if (v) parts.push(`${ax} ∈ [${v[0]}, ${v[1]}]`);
   }
   return parts.join(", ") || "(sin dominio)";
+}
+
+// ---------------------------------------------------------------------------
+// Image confirmation panel (after /vision/extract)
+// ---------------------------------------------------------------------------
+
+interface ImageConfirmationProps {
+  extraction: VisionExtractionResult;
+  loading: boolean;
+  onSolve: () => void;
+  onEdit: () => void;
+  onDiscard: () => void;
+}
+
+const CONFIDENCE_LABEL: Record<string, string> = {
+  high: "Alta",
+  medium: "Media",
+  low: "Baja",
+};
+
+const CONFIDENCE_COLOR: Record<string, string> = {
+  high: "var(--intuition)",
+  medium: "var(--text-muted)",
+  low: "var(--pitfall)",
+};
+
+function ImageConfirmationPanel({
+  extraction,
+  loading,
+  onSolve,
+  onEdit,
+  onDiscard,
+}: ImageConfirmationProps) {
+  const { problem: p } = extraction;
+  return (
+    <section className="panel">
+      <h2>Confirma la transcripción</h2>
+      <p style={{ marginTop: 0, color: "var(--text-muted)", fontSize: 14 }}>
+        Compara la foto con el LaTeX transcrito. Si está bien, pulsa{" "}
+        <strong>Resolver</strong>. Si hay errores, usa{" "}
+        <strong>Editar manualmente</strong> para corregir.
+      </p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+        <div>
+          <div className="field-label">Imagen original</div>
+          {extraction.image_preview_data_url && (
+            <img
+              src={extraction.image_preview_data_url}
+              alt="Imagen procesada"
+              style={{
+                maxWidth: "100%",
+                maxHeight: 240,
+                borderRadius: 6,
+                border: "1px solid var(--border)",
+              }}
+            />
+          )}
+        </div>
+        <div>
+          <div className="field-label">Transcripción LaTeX</div>
+          <div
+            style={{
+              padding: "10px 12px",
+              background: "var(--surface-2)",
+              borderRadius: 6,
+              minHeight: 80,
+              overflowX: "auto",
+            }}
+          >
+            <KatexBlock latex={extraction.transcribed_latex || "(vacío)"} />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 12, fontSize: 14 }}>
+        <strong>Confianza del modelo:</strong>{" "}
+        <span style={{ color: CONFIDENCE_COLOR[extraction.confidence] }}>
+          {CONFIDENCE_LABEL[extraction.confidence]}
+        </span>
+        {extraction.confidence === "low" && (
+          <span style={{ color: "var(--pitfall)", marginLeft: 8 }}>
+            ⚠ Revisa cuidadosamente antes de resolver.
+          </span>
+        )}
+      </div>
+
+      <SummaryRow label="Tipo" value={p.equation_kind} />
+      <SummaryRow label="EDP" value={p.equation_latex} mono />
+      {p.geometry && <SummaryRow label="Geometría" value={p.geometry} />}
+      <SummaryRow label="Dominio" value={describeDomain(p)} />
+      <SummaryRow
+        label="Condiciones de contorno"
+        value={
+          p.boundary_conditions.length === 0
+            ? "(ninguna)"
+            : p.boundary_conditions
+                .map((bc) => `${bc.type}: ${bc.where} → ${bc.value}`)
+                .join("; ")
+        }
+      />
+      <SummaryRow
+        label="Condiciones iniciales"
+        value={
+          p.initial_conditions.length === 0
+            ? "(ninguna)"
+            : p.initial_conditions
+                .map((ic) =>
+                  ic.order === 0
+                    ? `u(·, 0) = ${ic.value}`
+                    : `u_t(·, 0) = ${ic.value}`,
+                )
+                .join("; ")
+        }
+      />
+      <SummaryRow label="Procesado por" value={extraction.engine} />
+      {extraction.notes && (
+        <div
+          className="observation observation-pitfall"
+          style={{ marginTop: 12 }}
+        >
+          <span className="obs-label">Nota:</span> {extraction.notes}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+        <button className="solve-button" onClick={onSolve} disabled={loading}>
+          {loading ? "Resolviendo…" : "Resolver"}
+        </button>
+        <button
+          className="solve-button"
+          onClick={onEdit}
+          style={{
+            background: "transparent",
+            color: "var(--accent)",
+            border: "1px solid var(--accent)",
+          }}
+        >
+          Editar manualmente
+        </button>
+        <button
+          className="solve-button"
+          onClick={onDiscard}
+          style={{
+            background: "transparent",
+            color: "var(--text-muted)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          Descartar
+        </button>
+      </div>
+    </section>
+  );
 }

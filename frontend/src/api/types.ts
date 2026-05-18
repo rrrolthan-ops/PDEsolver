@@ -94,3 +94,14 @@ export interface PDEProblem {
   parameters: Record<string, string>;
   notes?: string | null;
 }
+
+export type VisionConfidence = "high" | "medium" | "low";
+
+export interface VisionExtractionResult {
+  problem: PDEProblem;
+  transcribed_latex: string;
+  confidence: VisionConfidence;
+  engine: string;
+  image_preview_data_url: string | null;
+  notes: string | null;
+}

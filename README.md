@@ -6,14 +6,23 @@ pizarra, no como una calculadora que devuelve la respuesta final.
 
 ## Estado actual
 
-Este repositorio está en **Fase 3**. Lo que funciona hoy:
+Este repositorio está en **Fase 4**. Lo que funciona hoy:
 
 **Entradas soportadas:**
-- **Manual (LaTeX)** — ya disponible desde Fase 1.
-- **Lenguaje natural** (NUEVO) — español o inglés. Capa determinista de
-  plantillas + clasificador Claude opcional como fallback (configurable
-  vía `ANTHROPIC_API_KEY`). El LLM **sólo clasifica**, nunca resuelve.
-  El usuario confirma la interpretación antes de resolver.
+- **Manual (LaTeX)** — disponible desde Fase 1.
+- **Lenguaje natural** (Fase 3) — español o inglés. Capa determinista
+  de plantillas + clasificador Claude opcional. El LLM **sólo
+  clasifica**, nunca resuelve.
+- **Imagen** (NUEVO en Fase 4) — sube una foto JPG/PNG/WEBP/HEIC de
+  una página de libro, examen, pizarra o apunte. `claude-haiku-4-5`
+  con visión lee la imagen, transcribe la fórmula como LaTeX, y la
+  estructura como `PDEProblem` en una sola llamada. La transcripción
+  se muestra **lado a lado con la foto original** para que el usuario
+  confirme antes de resolver.
+
+Las tres modalidades convergen en el mismo `PDEProblem` canónico
+antes del solver, así que la calidad de la resolución es idéntica
+independientemente del modo de entrada.
 
 **Métodos de resolución:**
 
@@ -35,7 +44,7 @@ Este repositorio está en **Fase 3**. Lo que funciona hoy:
 | Transporte `u_t + c·u_x = 0` | `x ∈ ℝ` | Características | `characteristics_transport_1d` |
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 
-**118 tests pasando** (`pytest -v`).
+**132 tests pasando** (`pytest -v`).
 
 Cada método produce la misma estructura de **10 pasos** (Paso 0–9):
 planteamiento, clasificación, elección de método, desarrollo (incluyendo
@@ -132,6 +141,31 @@ patrones deterministas no cubren el enunciado), exporta:
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
 ```
+
+### Imagen (foto, escaneo)
+
+`POST /vision/extract` recibe una imagen (JPG/PNG/WEBP/HEIC) y devuelve
+un `PDEProblem` canónico junto con la transcripción LaTeX y una
+auto-evaluación de confianza:
+
+```bash
+curl -X POST http://localhost:8000/vision/extract \
+  -F "file=@photo.jpg" \
+  -F "hint=Es la ecuación del calor en una barra"
+```
+
+La respuesta incluye:
+- `problem` — el `PDEProblem` canónico (igual que las otras dos vías).
+- `transcribed_latex` — LaTeX verbatim, para que el usuario compare con
+  la foto.
+- `confidence` — `high`, `medium`, o `low`.
+- `image_preview_data_url` — la imagen pre-procesada como data URL para
+  renderizar en el navegador sin segunda llamada.
+
+Requiere `ANTHROPIC_API_KEY`. Internamente: `claude-haiku-4-5` (vision)
+con tool use + prompt caching del system prompt. PDFs todavía no son
+soportados directamente; convierte cada página a JPG antes de subir
+(`pdf2image` + Poppler).
 
 ### Calor 1D
 
@@ -423,13 +457,14 @@ Tijonov–Samarsky ("Equations of Mathematical Physics").
 
 ## Próximos hitos
 
-- **Fase 4**: pipeline de visión (OpenCV + pix2tex + Nougat + Mathpix
-  opcional).
 - **Fase 5**: exportación a PDF, biblioteca de problemas, pulido,
   plots para los métodos que hoy no los tienen (disco, Green 1D,
   Helmholtz, imágenes, biarmónica, bola, tambor).
-- **Extensiones** (sin fase numerada): armónicos esféricos completos,
-  modos angulares del tambor, Schrödinger con $V \neq 0$.
+- **Extensiones de visión** (sin fase numerada): soporte de PDF
+  multipágina vía `pdf2image`+Poppler, backend pix2tex/Nougat para
+  uso offline, soporte premium opcional Mathpix.
+- **Extensiones del solver** (sin fase numerada): armónicos esféricos
+  completos, modos angulares del tambor, Schrödinger con $V \neq 0$.
 
 ## Licencia
 

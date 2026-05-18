@@ -1,4 +1,8 @@
-import type { PDEProblem, SolutionResponse } from "./types";
+import type {
+  PDEProblem,
+  SolutionResponse,
+  VisionExtractionResult,
+} from "./types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -35,4 +39,28 @@ export async function parseNaturalLanguage(
   text: string,
 ): Promise<NaturalLanguageParseResponse> {
   return postJson<NaturalLanguageParseResponse>("/parse_natural", { text });
+}
+
+export async function extractFromImage(
+  file: File,
+  hint?: string,
+): Promise<VisionExtractionResult> {
+  const form = new FormData();
+  form.append("file", file);
+  if (hint?.trim()) form.append("hint", hint.trim());
+  const r = await fetch(`${BASE_URL}/vision/extract`, {
+    method: "POST",
+    body: form,
+  });
+  if (!r.ok) {
+    let detail = `HTTP ${r.status}`;
+    try {
+      const body = await r.json();
+      if (body?.detail) detail = body.detail;
+    } catch {
+      /* swallow */
+    }
+    throw new Error(detail);
+  }
+  return r.json();
 }

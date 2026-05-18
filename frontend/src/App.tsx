@@ -41,23 +41,24 @@ export default function App() {
           Lenguaje natural
         </button>
         <button
-          className="tab tab-disabled"
-          disabled
-          title="Disponible en Fase 4"
+          className={`tab ${tab === "image" ? "tab-active" : ""}`}
+          onClick={() => setTab("image")}
+          title="Sube una foto de un problema"
         >
-          Subir foto / PDF
+          Subir foto
         </button>
       </nav>
 
       <main className="app-main">
-        {tab !== "image" && <Solve mode={tab as "write" | "natural"} />}
+        <Solve mode={tab} />
       </main>
 
       <footer className="app-footer">
         <small>
-          Fase 3 — entrada en lenguaje natural disponible (clasificador
-          determinista + Claude opcional como clasificador semántico). Fase 4
-          (visión) en construcción.
+          Fase 4 — las tres modalidades de entrada (manual, lenguaje natural,
+          imagen) están operativas. La extracción visual usa
+          claude-haiku-4-5 como clasificador; la resolución matemática
+          siempre es simbólica.
         </small>
       </footer>
     </div>
