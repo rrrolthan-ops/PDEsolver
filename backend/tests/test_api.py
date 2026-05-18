@@ -106,3 +106,26 @@ def test_solve_truly_unsupported_returns_422():
     }
     r = client.post("/solve", json=payload)
     assert r.status_code == 422
+
+
+def test_parse_natural_heat():
+    """Natural-language → PDEProblem (deterministic path)."""
+    r = client.post(
+        "/parse_natural",
+        json={
+            "text": (
+                "Resuelve la ecuación del calor en una barra de longitud L "
+                "con extremos a temperatura cero y perfil inicial "
+                "f(x) = sin(pi*x/L)."
+            )
+        },
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["source"] == "deterministic"
+    assert body["problem"]["equation_kind"] == "heat"
+
+
+def test_parse_natural_empty_returns_422():
+    r = client.post("/parse_natural", json={"text": ""})
+    assert r.status_code == 422

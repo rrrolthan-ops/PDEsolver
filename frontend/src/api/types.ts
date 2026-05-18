@@ -72,9 +72,22 @@ export interface Domain {
   t?: [string, string] | null;
 }
 
+export type Geometry =
+  | "interval"
+  | "rectangle"
+  | "disk"
+  | "halfplane"
+  | "line"
+  | "halfline"
+  | "box"
+  | "cylinder"
+  | "sphere";
+
 export interface PDEProblem {
   equation_latex: string;
   equation_kind: string;
+  source_term?: string | null;
+  geometry?: Geometry | null;
   domain: Domain;
   boundary_conditions: BoundaryCondition[];
   initial_conditions: InitialCondition[];

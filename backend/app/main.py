@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes_parse import router as parse_router
 from app.api.routes_problems import router as problems_router
 
 app = FastAPI(
@@ -33,3 +34,4 @@ def health() -> dict[str, str]:
 
 
 app.include_router(problems_router)
+app.include_router(parse_router)

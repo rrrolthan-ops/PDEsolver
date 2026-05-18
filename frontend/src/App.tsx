@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Solve } from "./pages/Solve";
 import { useTheme } from "./theme/useTheme";
 
+type InputMode = "write" | "natural" | "image";
+
 export default function App() {
   const { theme, toggle } = useTheme();
-  const [tab] = useState<"write" | "natural" | "image">("write");
+  const [tab, setTab] = useState<InputMode>("write");
 
   return (
     <div className={`app theme-${theme}`}>
@@ -26,25 +28,36 @@ export default function App() {
       </header>
 
       <nav className="tabs" aria-label="Modo de entrada">
-        <button className="tab tab-active" disabled>
+        <button
+          className={`tab ${tab === "write" ? "tab-active" : ""}`}
+          onClick={() => setTab("write")}
+        >
           Escribir
         </button>
-        <button className="tab tab-disabled" disabled title="Disponible en Fase 3">
+        <button
+          className={`tab ${tab === "natural" ? "tab-active" : ""}`}
+          onClick={() => setTab("natural")}
+        >
           Lenguaje natural
         </button>
-        <button className="tab tab-disabled" disabled title="Disponible en Fase 4">
+        <button
+          className="tab tab-disabled"
+          disabled
+          title="Disponible en Fase 4"
+        >
           Subir foto / PDF
         </button>
       </nav>
 
       <main className="app-main">
-        {tab === "write" && <Solve />}
+        {tab !== "image" && <Solve mode={tab as "write" | "natural"} />}
       </main>
 
       <footer className="app-footer">
         <small>
-          Fase 1 — ecuación del calor 1D por separación de variables. Otras
-          EDPs y métodos llegan en fases posteriores.
+          Fase 3 — entrada en lenguaje natural disponible (clasificador
+          determinista + Claude opcional como clasificador semántico). Fase 4
+          (visión) en construcción.
         </small>
       </footer>
     </div>

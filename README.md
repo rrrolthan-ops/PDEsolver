@@ -6,7 +6,16 @@ pizarra, no como una calculadora que devuelve la respuesta final.
 
 ## Estado actual
 
-Este repositorio está en **Fase 2-D**. Lo que funciona hoy:
+Este repositorio está en **Fase 3**. Lo que funciona hoy:
+
+**Entradas soportadas:**
+- **Manual (LaTeX)** — ya disponible desde Fase 1.
+- **Lenguaje natural** (NUEVO) — español o inglés. Capa determinista de
+  plantillas + clasificador Claude opcional como fallback (configurable
+  vía `ANTHROPIC_API_KEY`). El LLM **sólo clasifica**, nunca resuelve.
+  El usuario confirma la interpretación antes de resolver.
+
+**Métodos de resolución:**
 
 | EDP | Dominio | Método | Slug |
 |---|---|---|---|
@@ -26,7 +35,7 @@ Este repositorio está en **Fase 2-D**. Lo que funciona hoy:
 | Transporte `u_t + c·u_x = 0` | `x ∈ ℝ` | Características | `characteristics_transport_1d` |
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 
-**99 tests pasando** (`pytest -v`).
+**118 tests pasando** (`pytest -v`).
 
 Cada método produce la misma estructura de **10 pasos** (Paso 0–9):
 planteamiento, clasificación, elección de método, desarrollo (incluyendo
@@ -101,6 +110,28 @@ docker compose up --build
 ```
 
 ## Cómo probar los métodos
+
+### Lenguaje natural
+
+`POST /parse_natural` traduce un enunciado libre en español o inglés a
+un `PDEProblem` canónico que después se manda a `/solve`:
+
+```bash
+curl -X POST http://localhost:8000/parse_natural \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Resuelve la ecuación del calor en una barra de longitud L con extremos a temperatura cero y perfil inicial f(x) = sin(pi*x/L)."}'
+```
+
+La respuesta trae el `PDEProblem` parseado y un campo `source` que indica
+si vino de la capa determinista o del LLM. El frontend muestra esta
+estructura al usuario para confirmación antes de invocar al solver.
+
+Para activar el clasificador Claude opcional (sólo necesario si los
+patrones deterministas no cubren el enunciado), exporta:
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+```
 
 ### Calor 1D
 
@@ -392,8 +423,6 @@ Tijonov–Samarsky ("Equations of Mathematical Physics").
 
 ## Próximos hitos
 
-- **Fase 3**: entrada por lenguaje natural (clasificador LLM, nunca
-  resolvedor).
 - **Fase 4**: pipeline de visión (OpenCV + pix2tex + Nougat + Mathpix
   opcional).
 - **Fase 5**: exportación a PDF, biblioteca de problemas, pulido,
