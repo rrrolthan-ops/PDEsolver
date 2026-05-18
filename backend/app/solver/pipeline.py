@@ -12,8 +12,12 @@ import sympy as sp
 
 from app.schemas import PDEProblem, SolutionResponse
 from app.solver.core.method_picker import pick_method
+from app.solver.methods.biharmonic_beam import BiharmonicBeam
+from app.solver.methods.characteristics import CharacteristicsTransport1D
 from app.solver.methods.dalembert import DAlembertWave1D
 from app.solver.methods.green_1d import GreensFunction1D
+from app.solver.methods.images_halfplane import ImagesHalfPlane
+from app.solver.methods.schrodinger_well import SchrodingerInfiniteWell
 from app.solver.methods.separation_of_variables import SeparationOfVariablesHeat1D
 from app.solver.methods.sov_helmholtz_rect import HelmholtzRect
 from app.solver.methods.sov_laplace import SeparationOfVariablesLaplaceRect
@@ -33,6 +37,10 @@ _METHODS = {
     "greens_function_1d": GreensFunction1D(),
     "helmholtz_rect": HelmholtzRect(),
     "telegraph_sov": TelegraphSOV(),
+    "schrodinger_well": SchrodingerInfiniteWell(),
+    "characteristics_transport_1d": CharacteristicsTransport1D(),
+    "biharmonic_beam": BiharmonicBeam(),
+    "images_halfplane": ImagesHalfPlane(),
 }
 
 

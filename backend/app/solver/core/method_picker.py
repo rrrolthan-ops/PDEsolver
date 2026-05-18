@@ -174,6 +174,68 @@ def _looks_like_telegraph(p: PDEProblem) -> bool:
     )
 
 
+def _looks_like_schrodinger_well(p: PDEProblem) -> bool:
+    """Schrödinger in a 1D infinite well: bounded interval + Dirichlet 0."""
+    if p.equation_kind == "schrodinger":
+        return _has_1d_interval_domain(p) and _all_dirichlet_zero(p)
+    latex = p.equation_latex.replace(" ", "").lower()
+    # `i*hbar*u_t = -hbar^2/(2*m)*u_xx` or variants.
+    has_hbar = "hbar" in latex
+    has_i_u_t = "i*hbar*u_t" in latex or "i hbar u_t" in latex or "ihbar*u_t" in latex
+    return (
+        has_hbar
+        and has_i_u_t
+        and _has_1d_interval_domain(p)
+        and _all_dirichlet_zero(p)
+    )
+
+
+def _looks_like_characteristics_transport(p: PDEProblem) -> bool:
+    """First-order transport u_t + c u_x = 0 on the line."""
+    if p.equation_kind == "general":
+        latex = p.equation_latex.replace(" ", "").lower()
+        if ("u_t+c*u_x=0" in latex or "u_t+cu_x=0" in latex) and _is_unbounded_x(p):
+            return True
+    # No dedicated equation_kind; rely on latex shape.
+    latex = p.equation_latex.replace(" ", "").lower()
+    transport_shapes = ("u_t+c*u_x=0", "u_t+cu_x=0", "u_t+c\\cdotu_x=0")
+    return any(s in latex for s in transport_shapes) and _is_unbounded_x(p)
+
+
+def _looks_like_biharmonic_beam(p: PDEProblem) -> bool:
+    """1D biharmonic / beam: EI u'''' = q on bounded interval."""
+    if p.equation_kind == "biharmonic" and _has_1d_interval_domain(p):
+        return True
+    latex = p.equation_latex.replace(" ", "").lower()
+    # Match u'''' (any spacing).
+    has_4thder = (
+        "u''''" in latex
+        or "u^{(4)}" in latex
+        or "u_{xxxx}" in latex
+        or "\\nabla^4u" in latex
+    )
+    return has_4thder and _has_1d_interval_domain(p)
+
+
+def _looks_like_images_halfplane(p: PDEProblem) -> bool:
+    """Laplace on a half-plane: geometry hint or domain shape gives it away."""
+    if p.geometry == "halfplane":
+        return p.equation_kind in ("laplace", "general")
+    # Otherwise: y in [0, infty], x in (-infty, infty), equation is Laplace.
+    if p.domain.x is None or p.domain.y is None:
+        return False
+    y_bounds = [s.strip().lower() for s in p.domain.y]
+    x_bounds = [s.strip().lower() for s in p.domain.x]
+    y_is_halfline = y_bounds[0] == "0" and y_bounds[1] in {"infty", "inf", "oo"}
+    x_is_line = x_bounds[0] in {"-infty", "-inf", "-oo"} and x_bounds[1] in {"infty", "inf", "oo"}
+    if not (y_is_halfline and x_is_line):
+        return False
+    if p.equation_kind == "laplace":
+        return True
+    latex = p.equation_latex.replace(" ", "").lower()
+    return "u_{xx}+u_{yy}=0" in latex or "u_xx+u_yy=0" in latex
+
+
 # ---------------------------------------------------------------------------
 # Choice builders — return a fresh `MethodChoice` per dispatch
 # ---------------------------------------------------------------------------
@@ -340,17 +402,96 @@ def _choice_telegraph(_p: PDEProblem | None = None) -> MethodChoice:
     )
 
 
+def _choice_schrodinger_well(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="schrodinger_well",
+        rationale_md=(
+            "La EDP es lineal con BCs homogéneas en un intervalo "
+            "finito (las paredes infinitas del pozo). **Separación de "
+            "variables** produce el problema espacial de Sturm-Liouville "
+            "estándar y una EDO temporal de primer orden con coeficiente "
+            "imaginario, que da rotación de fase $e^{-i E t / \\hbar}$. "
+            "Los autovalores son los **niveles de energía cuantizados**."
+        ),
+        alternatives_md=(
+            "Para potenciales más generales $V(x)$ usaríamos "
+            "**perturbación**, **WKB**, o métodos numéricos. Aquí "
+            "$V = 0$ dentro de la caja, así que la solución es elemental."
+        ),
+    )
+
+
+def _choice_characteristics(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="characteristics_transport_1d",
+        rationale_md=(
+            "La EDP es de **primer orden hiperbólica**. El método de "
+            "las **características** es el camino canónico: parametrizar "
+            "las curvas $dx/dt = c$ a lo largo de las cuales la solución "
+            "se transporta sin cambios."
+        ),
+        alternatives_md=(
+            "**Transformada de Fourier** también funciona (la solución "
+            "es $\\hat u(k, t) = e^{-ick t}\\hat u_0(k)$), pero "
+            "geométricamente las características son más intuitivas y "
+            "se generalizan a EDPs no lineales (donde Fourier no aplica)."
+        ),
+    )
+
+
+def _choice_biharmonic_beam(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="biharmonic_beam",
+        rationale_md=(
+            "Para una viga simplemente apoyada, las **cuatro condiciones "
+            "de contorno** se satisfacen automáticamente por la base "
+            "$\\sin(n\\pi x/L)$. Expandimos $u$ y $q$ en serie de senos "
+            "y leemos los coeficientes término a término."
+        ),
+        alternatives_md=(
+            "Para condiciones distintas (empotrado, libre) la base "
+            "$\\sin$ deja de servir y hay que usar **autofunciones de "
+            "Sturm-Liouville de cuarto orden** (funciones de Krylov). "
+            "Para una sola carga concentrada, **función de Green** es "
+            "más directa que la serie."
+        ),
+    )
+
+
+def _choice_images_halfplane(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="images_halfplane",
+        rationale_md=(
+            "El **semiplano** tiene simetría especular respecto al "
+            "muro $y = 0$. El método de **imágenes** explota esa "
+            "simetría: reflejando la fuente con signo opuesto, la "
+            "función de Green del plano entero produce automáticamente "
+            "$G = 0$ en el muro."
+        ),
+        alternatives_md=(
+            "**Transformada de Fourier en $x$** da la misma fórmula "
+            "de Poisson tras invertir; **transformada conforme** "
+            "(p. ej. $z \\mapsto i(1 + z)/(1 - z)$) mapea el semiplano "
+            "al disco unidad y reduce el problema al de Laplace en disco."
+        ),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Registry — order matters: most specific first
 # ---------------------------------------------------------------------------
 
 _REGISTRY: list[tuple[Callable[[PDEProblem], bool], Callable[[PDEProblem | None], MethodChoice]]] = [
     # Most specific first.
+    (_looks_like_schrodinger_well, _choice_schrodinger_well),
+    (_looks_like_biharmonic_beam, _choice_biharmonic_beam),
+    (_looks_like_characteristics_transport, _choice_characteristics),
     (_looks_like_poisson_1d, _choice_greens_1d),
     (_looks_like_telegraph, _choice_telegraph),
     (_looks_like_heat_1d, _choice_heat_1d_sov),
     (_looks_like_wave_1d_unbounded, _choice_dalembert),
     (_looks_like_wave_1d_bounded, _choice_wave_1d_sov),
+    (_looks_like_images_halfplane, _choice_images_halfplane),
     (_looks_like_laplace_disk, _choice_laplace_disk),
     (_looks_like_laplace_rect, _choice_laplace_rect),
     (_looks_like_helmholtz_rect, _choice_helmholtz_rect),
@@ -364,11 +505,11 @@ def pick_method(problem: PDEProblem) -> MethodChoice:
             return builder(problem)
     raise NotImplementedError(
         "Ningún método del repertorio actual cubre este problema. "
-        "Repertorio implementado (Fase 1 + 2-A + 2-B): calor 1D, onda 1D "
-        "(SOV y D'Alembert), Laplace en rectángulo y en disco, Poisson 1D "
-        "(función de Green), Helmholtz en rectángulo, telégrafo. "
-        "Fase 2-C añadirá: Schrödinger, coordenadas cilíndricas/esféricas, "
-        "método de imágenes."
+        "Repertorio implementado (Fase 1 + 2-A + 2-B + 2-C): calor 1D, "
+        "onda 1D (SOV y D'Alembert), Laplace en rectángulo, disco y "
+        "semiplano (imágenes), Poisson 1D (Green), Helmholtz en "
+        "rectángulo, telégrafo, Schrödinger en pozo infinito, transporte "
+        "1D por características, biarmónica/viga 1D."
     )
 
 

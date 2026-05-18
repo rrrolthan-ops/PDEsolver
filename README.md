@@ -6,7 +6,7 @@ pizarra, no como una calculadora que devuelve la respuesta final.
 
 ## Estado actual
 
-Este repositorio está en **Fase 2-B**. Lo que funciona hoy:
+Este repositorio está en **Fase 2-C**. Lo que funciona hoy:
 
 | EDP | Dominio | Método | Slug |
 |---|---|---|---|
@@ -15,22 +15,25 @@ Este repositorio está en **Fase 2-B**. Lo que funciona hoy:
 | Onda `u_tt = c² u_xx` | `x ∈ ℝ` | Fórmula de D'Alembert | `dalembert_wave_1d` |
 | Laplace `∇²u = 0` | `[0, a] × [0, b]` | Separación de variables | `sov_laplace_rect` |
 | Laplace `∇²u = 0` | disco `r < R` | Separación en polares + Poisson | `sov_laplace_disk` |
+| Laplace `∇²u = 0` | semiplano `y > 0` | Método de imágenes | `images_halfplane` |
 | Poisson `−u'' = f(x)` | `[0, L]`, Dirichlet 0 | Función de Green | `greens_function_1d` |
 | Helmholtz `Δu + k²u = f` | `[0, a] × [0, b]`, Dirichlet 0 | Expansión en autofunciones | `helmholtz_rect` |
 | Telégrafo `u_tt + 2αu_t + βu = c²u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `telegraph_sov` |
+| Schrödinger pozo infinito `iℏψ_t = −ℏ²/(2m)ψ_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `schrodinger_well` |
+| Transporte `u_t + c·u_x = 0` | `x ∈ ℝ` | Características | `characteristics_transport_1d` |
+| Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 
-**61 tests pasando** (`pytest -v`).
+**83 tests pasando** (`pytest -v`).
 
 Cada método produce la misma estructura de **10 pasos** (Paso 0–9):
 planteamiento, clasificación, elección de método, desarrollo (incluyendo
 los tres casos de λ cuando aplica), aplicación de BCs/ICs, solución
 final, verificación simbólica, visualización y lectura física.
 
-Lo que **NO** está todavía: Schrödinger libre y con pozo, coordenadas
-cilíndricas/esféricas (Bessel/Legendre/armónicos esféricos), método de
-imágenes, biarmónica, método de las características en su versión
-general. Llegan en Fase 2-C. Tampoco: lenguaje natural (Fase 3),
-visión (Fase 4), exportación PDF y biblioteca (Fase 5).
+Lo que **NO** está todavía: coordenadas cilíndricas/esféricas con
+Bessel/Legendre/armónicos esféricos. Llegan en Fase 2-D (si la haces).
+Tampoco: lenguaje natural (Fase 3), visión (Fase 4), exportación PDF y
+biblioteca (Fase 5).
 
 ## Arquitectura
 
@@ -224,6 +227,69 @@ curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d 
 }'
 ```
 
+### Schrödinger en pozo infinito
+
+Partícula libre confinada en `[0, L]`:
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "i*hbar*u_t = -hbar^2/(2*m) * u_{xx}",
+  "equation_kind": "schrodinger",
+  "domain": {"x": ["0", "L"], "t": ["0", "infty"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "x=0", "value": "0"},
+    {"type": "dirichlet", "where": "x=L", "value": "0"}
+  ],
+  "initial_conditions": [{"order": 0, "value": "sqrt(2/L)*sin(pi*x/L)"}],
+  "parameters": {"L": "positive", "hbar": "positive", "m": "positive"}
+}'
+```
+
+### Transporte 1D por características
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "u_t + c*u_x = 0",
+  "domain": {"x": ["-infty", "infty"], "t": ["0", "infty"]},
+  "boundary_conditions": [],
+  "initial_conditions": [{"order": 0, "value": "exp(-x^2)"}],
+  "parameters": {"c": "positive"}
+}'
+```
+
+### Viga simplemente apoyada (biarmónica 1D)
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "EI*u'\'''\'''\'''\'' = q(x)",
+  "equation_kind": "biharmonic",
+  "source_term": "sin(pi*x/L)",
+  "domain": {"x": ["0", "L"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "x=0", "value": "0"},
+    {"type": "dirichlet", "where": "x=L", "value": "0"}
+  ],
+  "initial_conditions": [{"order": 0, "value": "0"}],
+  "parameters": {"L": "positive", "EI": "positive"}
+}'
+```
+
+### Laplace en semiplano (método de imágenes)
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "u_{xx} + u_{yy} = 0",
+  "equation_kind": "laplace",
+  "geometry": "halfplane",
+  "domain": {"x": ["-infty", "infty"], "y": ["0", "infty"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "y=0", "value": "1/(1 + x^2)"}
+  ],
+  "initial_conditions": [{"order": 0, "value": "0"}],
+  "parameters": {}
+}'
+```
+
 ### Laplace en rectángulo
 
 Tres lados a cero, un lado con dato:
@@ -271,14 +337,16 @@ Tijonov–Samarsky ("Equations of Mathematical Physics").
 
 ## Próximos hitos
 
-- **Fase 2-C**: Schrödinger libre y con pozo, coordenadas
-  cilíndricas/esféricas (Bessel, Legendre, armónicos esféricos),
-  método de imágenes, biarmónica, método de las características general.
+- **Fase 2-D** (opcional): coordenadas cilíndricas/esféricas con
+  funciones de Bessel, polinomios de Legendre y armónicos esféricos.
+  Requiere infraestructura especial-función adicional.
 - **Fase 3**: entrada por lenguaje natural (clasificador LLM, nunca
   resolvedor).
 - **Fase 4**: pipeline de visión (OpenCV + pix2tex + Nougat + Mathpix
   opcional).
-- **Fase 5**: exportación a PDF, biblioteca de problemas, pulido.
+- **Fase 5**: exportación a PDF, biblioteca de problemas, pulido,
+  plots para los métodos que hoy no los tienen (disco, Green 1D,
+  Helmholtz, imágenes, biarmónica).
 
 ## Licencia
 

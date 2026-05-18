@@ -916,3 +916,328 @@ def T_telegraph_physical_interpretation() -> str:
         "espacial** desplazada, y la señal viaja sin distorsión, sólo "
         "atenuándose globalmente — el descubrimiento clave de Heaviside."
     )
+
+
+# ===========================================================================
+# SCHRÖDINGER — particle in an infinite 1D well
+# ===========================================================================
+
+def T_statement_schrodinger_well() -> str:
+    return (
+        "Resolvemos la **ecuación de Schrödinger dependiente del tiempo** "
+        "para una partícula libre confinada en una caja unidimensional "
+        "(pozo infinito) de longitud $L$:\n\n"
+        "$$i\\hbar\\, \\psi_t = -\\frac{\\hbar^2}{2m}\\, \\psi_{xx},"
+        "\\quad 0 < x < L,\\quad t > 0.$$\n\n"
+        "Las paredes infinitas se traducen en condiciones de Dirichlet "
+        "homogéneas $\\psi(0, t) = \\psi(L, t) = 0$ (la función de onda "
+        "no puede penetrar las paredes). Iniciamos con un estado "
+        "$\\psi(x, 0) = \\psi_0(x)$. La incógnita $\\psi$ es **compleja**: "
+        "$|\\psi|^2$ es la densidad de probabilidad de hallar la "
+        "partícula en $x$ al tiempo $t$."
+    )
+
+
+def T_schrodinger_method_choice() -> str:
+    return (
+        "La EDP es **lineal y homogénea** y las BCs son Dirichlet "
+        "homogéneas en un intervalo finito. Separación de variables "
+        "aplica directamente. La novedad respecto a heat/wave es que "
+        "la **constante de separación** será **real** pero la EDO "
+        "temporal involucra la **unidad imaginaria** $i$, así que las "
+        "soluciones temporales son **rotaciones de fase** complejas, "
+        "no decaimiento ni oscilación real."
+    )
+
+
+def T_schrodinger_separation() -> str:
+    return (
+        "Probamos $\\psi(x, t) = \\varphi(x)\\, T(t)$. Sustituyendo:\n\n"
+        "$$i\\hbar\\, \\varphi(x)\\, T'(t) = -\\frac{\\hbar^2}{2m}\\, "
+        "\\varphi''(x)\\, T(t).$$\n\n"
+        "Dividiendo por $\\varphi(x) T(t)$, queda toda dependencia en $t$ "
+        "a un lado y toda en $x$ al otro. Llamamos a la constante de "
+        "separación **$E$** (anticipando su interpretación como energía):"
+    )
+
+
+def T_schrodinger_spatial_temporal() -> str:
+    return (
+        "El **lado izquierdo** (sólo en $t$) iguala $E$:\n\n"
+        "$$i\\hbar\\, \\frac{T'(t)}{T(t)} = E \\Rightarrow "
+        "T(t) = T_0\\, e^{-i E t / \\hbar}.$$\n\n"
+        "El **lado derecho** (sólo en $x$) iguala $E$ también:\n\n"
+        "$$-\\frac{\\hbar^2}{2m}\\, \\frac{\\varphi''(x)}{\\varphi(x)} = E "
+        "\\Rightarrow \\varphi''(x) + \\frac{2mE}{\\hbar^2}\\, \\varphi(x) = 0.$$\n\n"
+        "Esta es la **ecuación de Schrödinger independiente del tiempo**: "
+        "un problema de Sturm-Liouville idéntico al del calor pero con "
+        "$\\lambda = 2mE/\\hbar^2$ como autovalor."
+    )
+
+
+def T_schrodinger_eigenvalues() -> str:
+    return (
+        "Las BCs $\\varphi(0) = \\varphi(L) = 0$ fuerzan, repitiendo el "
+        "análisis de los tres casos (idéntico al del calor), "
+        "$\\sqrt{2mE/\\hbar^2}\\cdot L = n\\pi$. Despejando $E$:\n\n"
+        "$$\\boxed{\\, E_n = \\frac{n^2 \\pi^2 \\hbar^2}{2 m L^2},\\quad "
+        "\\varphi_n(x) = \\sqrt{\\tfrac{2}{L}}\\, \\sin\\!\\bigl(\\tfrac{n\\pi x}{L}\\bigr),"
+        "\\quad n = 1, 2, 3, \\dots \\,}$$\n\n"
+        "Estos son los **niveles de energía cuantizados** de la partícula "
+        "en la caja: el resultado más icónico de la mecánica cuántica "
+        "elemental. La cuantización aparece por las condiciones de "
+        "contorno, **exactamente como los modos de una cuerda fija en "
+        "ambos extremos**: la matemática es la misma; la diferencia es "
+        "que aquí $E$ tiene unidades de energía y etiqueta estados, no "
+        "frecuencias."
+    )
+
+
+def T_schrodinger_superposition() -> str:
+    return (
+        "La solución general es la **superposición** de los estados "
+        "estacionarios $\\varphi_n e^{-i E_n t / \\hbar}$:\n\n"
+        "$$\\psi(x, t) = \\sum_{n=1}^{\\infty} c_n\\, \\varphi_n(x)\\, "
+        "e^{-i E_n t / \\hbar}.$$\n\n"
+        "Los coeficientes $c_n$ son complejos en general. Al aplicar "
+        "$\\psi(x, 0) = \\psi_0(x)$ y usar la ortonormalidad de "
+        "$\\{\\varphi_n\\}$:\n\n"
+        "$$c_n = \\int_0^L \\varphi_n(x)\\, \\psi_0(x)\\, dx.$$"
+    )
+
+
+def T_schrodinger_physical_interpretation() -> str:
+    return (
+        "La función de onda $\\psi(x, t)$ no es directamente observable; "
+        "lo es **$|\\psi(x, t)|^2$**, la densidad de probabilidad. "
+        "Observaciones físicas clave:\n\n"
+        "- **Estados estacionarios.** Si $\\psi_0 = \\varphi_n$, entonces "
+        "$\\psi(x, t) = \\varphi_n(x)\\, e^{-i E_n t / \\hbar}$ y "
+        "$|\\psi|^2 = |\\varphi_n|^2$ **no depende del tiempo**.\n"
+        "- **Cuantización.** Las energías $E_n$ forman un conjunto "
+        "**discreto**. No hay continuo de niveles permitidos: ése es "
+        "el descubrimiento revolucionario de la mecánica cuántica.\n"
+        "- **Energía del estado fundamental.** $E_1 = \\pi^2 \\hbar^2 / (2mL^2) > 0$. "
+        "**No hay estado de energía cero.** Una consecuencia del "
+        "principio de indeterminación: confinar la partícula obliga a "
+        "que tenga energía cinética mínima.\n"
+        "- **Espacios entre niveles.** $E_{n+1} - E_n = (2n+1)\\pi^2 \\hbar^2 / (2mL^2)$ "
+        "crece linealmente con $n$. Pozos más pequeños o partículas "
+        "más ligeras dan espacios más grandes (efectos cuánticos más "
+        "visibles)."
+    )
+
+
+# ===========================================================================
+# CHARACTERISTICS — first-order transport
+# ===========================================================================
+
+def T_statement_characteristics() -> str:
+    return (
+        "Resolvemos la **ecuación de transporte 1D**\n\n"
+        "$$u_t + c\\, u_x = 0, \\quad x \\in \\mathbb{R},\\ t > 0,\\qquad "
+        "u(x, 0) = u_0(x).$$\n\n"
+        "Es la EDP de primer orden más sencilla. Físicamente: una "
+        "concentración $u$ que se transporta por un flujo a velocidad "
+        "constante $c$, sin difusión ni reacción. Aunque sea simple, "
+        "es el **modelo de juguete** que introduce el método de las "
+        "**características**, técnica fundamental para EDPs hiperbólicas "
+        "de primer orden (incluida la ecuación de Burgers no lineal y "
+        "la dinámica de fluidos compresibles)."
+    )
+
+
+def T_characteristics_method_motivation() -> str:
+    return (
+        "**Idea geométrica.** Pensamos en $u(x, t)$ como una función "
+        "definida en el plano $(x, t)$ y buscamos **curvas** a lo largo "
+        "de las cuales $u$ sea **constante**. Si encontramos tales "
+        "curvas, conocer $u$ en un punto basta para conocerlo en toda "
+        "la curva.\n\n"
+        "A lo largo de una curva $x = x(t)$, por la regla de la cadena:\n\n"
+        "$$\\frac{du}{dt} = u_t + u_x\\, \\frac{dx}{dt}.$$\n\n"
+        "Comparando con $u_t + c\\, u_x = 0$, vemos que $u$ es constante "
+        "a lo largo de curvas con $dx/dt = c$. Esas son rectas "
+        "$x = ct + \\text{cte}$, llamadas **rectas características**."
+    )
+
+
+def T_characteristics_solve() -> str:
+    return (
+        "**Resolución.** A cada característica le asignamos su parámetro "
+        "$\\xi = x - ct$ (el punto donde la característica corta el eje "
+        "$t = 0$). Como $u$ es constante a lo largo de cada característica:\n\n"
+        "$$u(x, t) = u(\\xi, 0) = u_0(\\xi) = u_0(x - ct).$$\n\n"
+        "Es decir, **la solución es el perfil inicial trasladado a "
+        "velocidad $c$**, sin deformación."
+    )
+
+
+def T_characteristics_physical_interpretation() -> str:
+    return (
+        "Tres lecturas inmediatas:\n\n"
+        "- **Propagación sin distorsión.** El perfil $u_0$ viaja "
+        "rígidamente. Esto contrasta con la ecuación del calor "
+        "(difunde, suaviza) y con Burgers (se deforma y puede formar "
+        "choques).\n"
+        "- **Sin condiciones de contorno.** Como la EDP es de primer "
+        "orden, basta con la condición inicial. En la línea infinita "
+        "no hay otras condiciones que imponer.\n"
+        "- **Generalización.** Para $u_t + c(x, t)\\, u_x = f(x, t, u)$, "
+        "las características dejan de ser rectas y $u$ ya no es "
+        "constante a lo largo de ellas, pero el método sigue: se "
+        "resuelve una EDO a lo largo de cada característica. Es la "
+        "puerta de entrada al análisis de leyes de conservación y "
+        "dinámica de gases."
+    )
+
+
+# ===========================================================================
+# BIHARMONIC — beam deflection (1D fourth-order)
+# ===========================================================================
+
+def T_statement_biharmonic_beam() -> str:
+    return (
+        "Resolvemos la **ecuación de la viga simplemente apoyada**:\n\n"
+        "$$EI\\, u''''(x) = q(x), \\quad 0 < x < L,$$\n\n"
+        "con $u$ el desplazamiento transversal, $q(x)$ la carga "
+        "distribuida, y $EI$ la rigidez a flexión. Las condiciones de "
+        "**apoyo simple** en ambos extremos son\n\n"
+        "$$u(0) = u(L) = 0 \\quad \\text{(sin deflexión)}, \\qquad "
+        "u''(0) = u''(L) = 0 \\quad \\text{(sin momento flector)}.$$\n\n"
+        "Es una EDO de **cuarto orden**, así que necesitamos **cuatro** "
+        "condiciones, dos en cada extremo."
+    )
+
+
+def T_biharmonic_method_choice() -> str:
+    return (
+        "Como las cuatro condiciones de apoyo simple son compatibles "
+        "con la base $\\sin(n\\pi x/L)$ — cada seno satisface las cuatro "
+        "automáticamente — usamos **expansión en serie de senos**. Para "
+        "BCs distintas se necesitaría una base diferente (la teoría de "
+        "Sturm-Liouville de cuarto orden la provee).\n\n"
+        "**Verificación cosmética:** $\\sin(n\\pi x/L)$ se anula en "
+        "$0$ y en $L$, y su segunda derivada $-(n\\pi/L)^2 \\sin(n\\pi x/L)$ "
+        "también. Las cuatro BCs se satisfacen por construcción."
+    )
+
+
+def T_biharmonic_expansion() -> str:
+    return (
+        "Expandimos $u$ y $q$ en serie de senos:\n\n"
+        "$$u(x) = \\sum_{n=1}^{\\infty} A_n \\sin\\!\\bigl(\\tfrac{n\\pi x}{L}\\bigr),"
+        "\\qquad q(x) = \\sum_{n=1}^{\\infty} q_n \\sin\\!\\bigl(\\tfrac{n\\pi x}{L}\\bigr).$$\n\n"
+        "Al sustituir en $EI\\, u'''' = q$ y observando que "
+        "$d^4/dx^4 \\sin(n\\pi x/L) = (n\\pi/L)^4 \\sin(n\\pi x/L)$, "
+        "igualamos coeficientes término a término:\n\n"
+        "$$EI\\, \\left(\\tfrac{n\\pi}{L}\\right)^4 A_n = q_n "
+        "\\Rightarrow A_n = \\frac{q_n}{EI\\, (n\\pi/L)^4}.$$"
+    )
+
+
+def T_biharmonic_physical_interpretation() -> str:
+    return (
+        "Lecturas físicas:\n\n"
+        "- **Atenuación de modos altos.** El factor $1/(n\\pi/L)^4$ es "
+        "**muy pequeño** para $n$ grande: una carga oscilatoria de "
+        "frecuencia espacial alta produce una deflexión minúscula. Por "
+        "eso las vigas filtran muy bien las vibraciones de alta "
+        "frecuencia.\n"
+        "- **Modo dominante.** Para una carga uniforme o concentrada en "
+        "el centro, $q_1$ domina: la deflexión se parece mucho a "
+        "$\\sin(\\pi x/L)$ con máximo en el centro.\n"
+        "- **Comparación con la cuerda.** Las EDOs son distintas "
+        "(cuarto orden vs segundo) pero las **autofunciones son las "
+        "mismas**: las simetrías del intervalo finito con BCs "
+        "compatibles fuerzan la base trigonométrica."
+    )
+
+
+# ===========================================================================
+# METHOD OF IMAGES — Laplace in half-plane
+# ===========================================================================
+
+def T_statement_images_halfplane() -> str:
+    return (
+        "Resolvemos el problema de Dirichlet en el **semiplano superior**:\n\n"
+        "$$\\Delta u = 0, \\quad y > 0,\\quad u(x, 0) = f(x),$$\n\n"
+        "con la condición adicional de **decaimiento al infinito**.\n\n"
+        "Físicamente: el potencial electrostático en una región limitada "
+        "por un conductor a tierra ($u = 0$) con un dato $f$ aplicado en "
+        "la pared; o la temperatura estacionaria de un semiplano con "
+        "una distribución de temperatura prescrita en el borde."
+    )
+
+
+def T_images_method_motivation() -> str:
+    return (
+        "**Idea del método.** Construimos primero la **función de Green** "
+        "del semiplano, $G(\\mathbf{r}; \\mathbf{r}')$, que resuelve\n\n"
+        "$$-\\Delta G = \\delta(\\mathbf{r} - \\mathbf{r}'), "
+        "\\quad G\\bigr|_{y=0} = 0.$$\n\n"
+        "Sin la condición de frontera, la solución fundamental del "
+        "Laplaciano 2D es $\\Phi(\\mathbf{r}) = -\\tfrac{1}{2\\pi} "
+        "\\ln|\\mathbf{r}|$. Para imponer $G\\bigr|_{y = 0} = 0$ usamos "
+        "un **truco geométrico**: colocar una **imagen especular** del "
+        "punto fuente $(x', y')$ del otro lado del muro, en $(x', -y')$, "
+        "con signo opuesto. La superposición se anula en el muro por "
+        "simetría."
+    )
+
+
+def T_images_green_construction() -> str:
+    return (
+        "Definimos\n\n"
+        "$$G(x, y; x', y') = -\\tfrac{1}{2\\pi} \\ln\\sqrt{(x - x')^2 + (y - y')^2} "
+        "+ \\tfrac{1}{2\\pi} \\ln\\sqrt{(x - x')^2 + (y + y')^2}.$$\n\n"
+        "**Verificación de las propiedades:**\n\n"
+        "- $-\\Delta G = \\delta$ en $y > 0$: el segundo término es "
+        "armónico en $y > 0$ (su singularidad está en $y = -y' < 0$, "
+        "fuera del semiplano), así que sólo el primer término aporta "
+        "el delta.\n"
+        "- En $y = 0$: las dos distancias coinciden "
+        "($\\sqrt{(x-x')^2 + y'^2}$ en ambos términos), los logaritmos "
+        "se cancelan exactamente, y $G = 0$. ✓"
+    )
+
+
+def T_images_poisson_kernel() -> str:
+    return (
+        "**Solución para datos en la frontera.** Para resolver "
+        "$\\Delta u = 0$ con $u(x, 0) = f(x)$, usamos la **fórmula de "
+        "representación de Green**\n\n"
+        "$$u(x, y) = -\\int_{-\\infty}^{\\infty} f(x')\\, "
+        "\\left.\\frac{\\partial G}{\\partial y'}\\right|_{y' = 0}\\, dx'.$$\n\n"
+        "Calculando la derivada normal de $G$ en $y' = 0$ llegamos al "
+        "**núcleo de Poisson del semiplano**:\n\n"
+        "$$P(x - x', y) = \\frac{1}{\\pi}\\, \\frac{y}{(x - x')^2 + y^2}.$$\n\n"
+        "Es un perfil **lorentziano** centrado en $x'$, con anchura "
+        "proporcional a $y$."
+    )
+
+
+def T_images_solution_formula() -> str:
+    return (
+        "**Fórmula final (Poisson para el semiplano):**\n\n"
+        "$$\\boxed{\\, u(x, y) = \\frac{y}{\\pi}\\, "
+        "\\int_{-\\infty}^{\\infty} \\frac{f(x')}{(x - x')^2 + y^2}\\, dx' \\,}$$"
+    )
+
+
+def T_images_physical_interpretation() -> str:
+    return (
+        "Tres lecturas:\n\n"
+        "- **Ventana de Poisson.** Cada punto $(x, y)$ promedia el "
+        "dato $f$ con peso $y / ((x - x')^2 + y^2)$, una **lorentziana** "
+        "de anchura $\\sim y$. Lejos del muro promediamos mucho (la "
+        "solución se suaviza); cerca del muro la ventana es estrecha y "
+        "preservamos los detalles de $f$.\n"
+        "- **Promedio total.** $\\int_{-\\infty}^\\infty P(s, y)\\, ds = 1$ "
+        "para todo $y > 0$: el núcleo es una **densidad de "
+        "probabilidad** y el método respeta promedios.\n"
+        "- **Generalización.** El método de imágenes funciona en "
+        "dominios con simetría especular: cuña (con varias imágenes), "
+        "tira semi-infinita (imágenes periódicas), o disco (con la "
+        "transformación de inversión $r \\mapsto R^2/r$)."
+    )

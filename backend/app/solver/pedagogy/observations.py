@@ -275,6 +275,103 @@ _REGISTRY: dict[str, DidacticObservation] = {
             "a la condición."
         ),
     ),
+    # ---- Schrödinger ------------------------------------------------------
+    "schrodinger_complex": DidacticObservation(
+        kind="pitfall",
+        text_md=(
+            "**$\\psi$ es compleja.** A diferencia de heat/wave, donde "
+            "$u$ era real, aquí la función de onda toma valores en "
+            "$\\mathbb{C}$. Las exponenciales temporales $e^{-iEt/\\hbar}$ "
+            "son **rotaciones de fase**, no decaimiento. Lo que se "
+            "observa físicamente es $|\\psi|^2$."
+        ),
+    ),
+    "schrodinger_quantization": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**La cuantización viene de las BCs.** Lo que cuantiza la "
+            "energía no es la EDP misma — es la combinación EDP + "
+            "condiciones de contorno. La misma matemática que da los "
+            "**modos de una cuerda fija** da los **niveles de energía** "
+            "del electrón en una caja."
+        ),
+    ),
+    "schrodinger_ground_state": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**No hay reposo cuántico.** $E_1 > 0$: la partícula no "
+            "puede estar quieta en el fondo del pozo. Confinar la "
+            "posición ($\\Delta x \\sim L$) obliga a tener cierta "
+            "extensión en momento ($\\Delta p \\gtrsim \\hbar/L$), que "
+            "se traduce en energía cinética mínima."
+        ),
+    ),
+    # ---- Characteristics --------------------------------------------------
+    "characteristics_first_order": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**EDPs de primer orden necesitan UNA condición.** Una EDP "
+            "$F(x, t, u, u_x, u_t) = 0$ tiene una sola \"dirección "
+            "característica\" en cada punto. Basta especificar el dato "
+            "a lo largo de una curva transversal a las características."
+        ),
+    ),
+    "characteristics_shock_warning": DidacticObservation(
+        kind="alternative",
+        text_md=(
+            "**Cuando $c$ depende de $u$, aparecen choques.** Para "
+            "$u_t + u\\, u_x = 0$ (Burgers), las características pueden "
+            "cruzarse en tiempo finito si $u_0$ es decreciente: la "
+            "solución pierde diferenciabilidad. Hay que pasar a "
+            "soluciones débiles (condición de Rankine-Hugoniot). Este "
+            "caso lineal con $c$ constante es el escenario domesticado "
+            "donde las características son rectas paralelas."
+        ),
+    ),
+    # ---- Biharmonic -------------------------------------------------------
+    "biharmonic_four_bcs": DidacticObservation(
+        kind="pitfall",
+        text_md=(
+            "**Cuatro BCs, no dos.** Un operador de cuarto orden "
+            "requiere cuatro condiciones para tener solución única. "
+            "Apoyo simple impone $u$ y $u''$ en cada extremo. Otras "
+            "opciones: empotrado ($u = u' = 0$), libre ($u'' = u''' = 0$). "
+            "La elección **debe ser compatible con la base** que uses."
+        ),
+    ),
+    "biharmonic_n4_decay": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Decaimiento como $1/n^4$.** Los coeficientes de la "
+            "deflexión decaen como la cuarta potencia inversa del "
+            "índice del modo. Eso significa que la serie converge muy "
+            "rápido y que las altas frecuencias de la carga se filtran "
+            "fuertemente."
+        ),
+    ),
+    # ---- Method of images -------------------------------------------------
+    "images_mirror_trick": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**El truco de espejo.** Para anular una función armónica "
+            "en una superficie plana, reflejamos la fuente a través de "
+            "esa superficie y le cambiamos el signo. La superposición "
+            "tiene **simetría especular** y por tanto vale cero en el "
+            "plano de simetría — sin necesidad de calcular nada más."
+        ),
+    ),
+    "images_general_geometry": DidacticObservation(
+        kind="alternative",
+        text_md=(
+            "**Qué dominios admiten imágenes.** El método funciona "
+            "limpiamente cuando la geometría es generada por "
+            "**reflexiones e inversiones** elementales: semiplano "
+            "(reflexión), cuña con ángulo $\\pi/n$ (varias reflexiones), "
+            "rectángulo (rejilla infinita), disco (inversión). Para "
+            "geometrías irregulares hay que recurrir a transformada "
+            "conforme (2D) o métodos numéricos."
+        ),
+    ),
 }
 
 
