@@ -27,7 +27,13 @@ from app.solver.methods.sov_laplace_disk import SeparationOfVariablesLaplaceDisk
 from app.solver.methods.sov_telegraph import TelegraphSOV
 from app.solver.methods.sov_wave import SeparationOfVariablesWave1D
 from app.solver.methods.sov_wave_disk import WaveDisk
-from app.solver.numerics import convergence_snapshots, sample_2d
+from app.solver.numerics import (
+    convergence_snapshots,
+    sample_2d,
+    sample_line,
+    sample_meridional_slice,
+    sample_polar_disk,
+)
 
 
 # Registry mapping slug → instance. Methods are stateless.
@@ -93,7 +99,12 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
             expr, var1=x, var2=t, var1_range=(0.0, 1.0), var2_range=(0.0, 0.5),
             parameter_values=params,
         )
-        plot = {"x": plot["var1"], "t": plot["var2"], "u": plot["u"]}
+        plot = {
+            "kind": "surface_xt",
+            "x": plot["var1"],
+            "t": plot["var2"],
+            "u": plot["u"],
+        }
         conv = convergence_snapshots(
             expr, var1=x, var2=t, parameter_values=params,
             var1_range=(0.0, 1.0), var2_eval=0.0,
@@ -107,7 +118,12 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
             expr, var1=x, var2=t, var1_range=(0.0, 1.0), var2_range=(0.0, 2.0),
             parameter_values=params,
         )
-        plot = {"x": plot["var1"], "t": plot["var2"], "u": plot["u"]}
+        plot = {
+            "kind": "surface_xt",
+            "x": plot["var1"],
+            "t": plot["var2"],
+            "u": plot["u"],
+        }
         conv = convergence_snapshots(
             expr, var1=x, var2=t, parameter_values=params,
             var1_range=(0.0, 1.0), var2_eval=0.0,
@@ -121,7 +137,12 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
             expr, var1=x, var2=t, var1_range=(-3.0, 3.0), var2_range=(0.0, 2.0),
             parameter_values=params,
         )
-        plot = {"x": plot["var1"], "t": plot["var2"], "u": plot["u"]}
+        plot = {
+            "kind": "surface_xt",
+            "x": plot["var1"],
+            "t": plot["var2"],
+            "u": plot["u"],
+        }
         return plot, None  # closed form → no convergence study
 
     if slug == "sov_laplace_rect":
@@ -132,7 +153,12 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
             expr, var1=x, var2=y, var1_range=(0.0, 1.0), var2_range=(0.0, 1.0),
             parameter_values=params,
         )
-        plot = {"x": plot["var1"], "t": plot["var2"], "u": plot["u"]}
+        plot = {
+            "kind": "surface_xt",
+            "x": plot["var1"],
+            "t": plot["var2"],
+            "u": plot["u"],
+        }
         conv = convergence_snapshots(
             expr, var1=x, var2=y, parameter_values=params,
             var1_range=(0.0, 1.0), var2_eval=1.0,  # snapshot at y = b
@@ -149,7 +175,12 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
             expr, var1=x, var2=t, var1_range=(0.0, 1.0), var2_range=(0.0, 4.0),
             parameter_values=params,
         )
-        plot = {"x": plot["var1"], "t": plot["var2"], "u": plot["u"]}
+        plot = {
+            "kind": "surface_xt",
+            "x": plot["var1"],
+            "t": plot["var2"],
+            "u": plot["u"],
+        }
         # Convergence at t = 0 (just the position profile).
         conv = convergence_snapshots(
             expr, var1=x, var2=t, parameter_values=params,
@@ -157,8 +188,150 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
         )
         return plot, conv
 
-    # Disk, Green 1D, and Helmholtz get no plot in this phase:
-    # disk needs Cartesian conversion (polar -> xy) and Helmholtz / Green
-    # have shapes the current frontend doesn't draw natively. Phase 5
-    # polish task.
+    # ---- 1D line plots ----------------------------------------------------
+
+    if slug == "greens_function_1d":
+        L = sp.Symbol("L", positive=True)
+        plot = sample_line(
+            expr,
+            x_sym=x,
+            x_range=(0.0, 1.0),
+            parameter_values={L: 1.0},
+            x_label="x",
+            y_label="u(x)",
+        )
+        return plot, None
+
+    if slug == "biharmonic_beam":
+        L = sp.Symbol("L", positive=True)
+        EI = sp.Symbol("EI", positive=True)
+        # The series truncates fast (1/n^4), so 30 terms is plenty.
+        plot = _sample_beam_line(expr, x_sym=x, params={L: 1.0, EI: 1.0})
+        return plot, None
+
+    # ---- Polar disc plots (Bessel-series methods) -------------------------
+
+    if slug == "sov_laplace_disk":
+        r = sp.Symbol("r", nonnegative=True)
+        theta = sp.Symbol("theta", real=True)
+        R = sp.Symbol("R", positive=True)
+        plot = sample_polar_disk(
+            expr,
+            r_sym=r,
+            theta_sym=theta,
+            R_value=1.0,
+            parameter_values={R: 1.0},
+            n_terms=20,
+        )
+        return plot, None
+
+    if slug == "sov_heat_disk":
+        r = sp.Symbol("r", nonnegative=True)
+        R = sp.Symbol("R", positive=True)
+        alpha = sp.Symbol("alpha", positive=True)
+        # Show u(x, y) at a fixed early time so the initial profile is visible
+        # but some decay is also apparent.
+        plot = sample_polar_disk(
+            expr,
+            r_sym=r,
+            theta_sym=None,
+            R_value=1.0,
+            parameter_values={R: 1.0, alpha: 1.0},
+            extra_subs={t: 0.02},
+            n_terms=12,
+        )
+        return plot, None
+
+    if slug == "sov_wave_disk":
+        r = sp.Symbol("r", nonnegative=True)
+        R = sp.Symbol("R", positive=True)
+        c = sp.Symbol("c", positive=True)
+        plot = sample_polar_disk(
+            expr,
+            r_sym=r,
+            theta_sym=None,
+            R_value=1.0,
+            parameter_values={R: 1.0, c: 1.0},
+            extra_subs={t: 0.0},  # initial profile snapshot
+            n_terms=12,
+        )
+        return plot, None
+
+    # ---- Meridional slice of the ball -------------------------------------
+
+    if slug == "sov_laplace_ball":
+        r = sp.Symbol("r", nonnegative=True)
+        theta = sp.Symbol("theta", real=True)
+        R = sp.Symbol("R", positive=True)
+        plot = sample_meridional_slice(
+            expr,
+            r_sym=r,
+            theta_sym=theta,
+            R_value=1.0,
+            parameter_values={R: 1.0},
+            n_terms=8,  # Legendre series; ell=0..7 is plenty
+        )
+        return plot, None
+
+    # Half-plane (images) and Helmholtz still don't render here. Half-plane
+    # would need numerical convolution of the Poisson kernel with f(x'); a
+    # follow-on can wire it. Helmholtz inhomogeneous solutions can blow up
+    # when k² is near an eigenvalue, so picking a "safe" k for the plot
+    # needs more care than this pass affords.
     return None, None
+
+
+# ---------------------------------------------------------------------------
+# Helpers used only by `_sample_for`
+# ---------------------------------------------------------------------------
+
+
+def _sample_beam_line(
+    expr: sp.Basic,
+    *,
+    x_sym: sp.Symbol,
+    params: dict[sp.Symbol, float],
+    n_terms: int = 30,
+    nx: int = 200,
+) -> dict:
+    """Sample the simply-supported-beam series on [0, L].
+
+    The result is `u(x) = Σ A_n sin(nπx/L)` with A_n proportional to 1/n^4.
+    We truncate to `n_terms` and use the existing _evaluate_radial logic
+    to handle the Sum.
+
+    For consistency with `sample_line`, the return value is tagged
+    `kind: "line"` and exposes `x`, `u`, plus axis labels.
+    """
+    import numpy as np
+
+    L_sym = next(s for s in params if s.name == "L")
+    L_val = params[L_sym]
+
+    # Truncate the Sum to n_terms.
+    if isinstance(expr, sp.Sum):
+        dummy, lower, _ = expr.limits[0]
+        start = int(lower)
+        # Build the truncated explicit sum.
+        truncated = sum(expr.function.subs(dummy, k) for k in range(start, start + n_terms))
+    else:
+        truncated = expr
+    truncated_concrete = truncated.subs(params)
+
+    free = list(truncated_concrete.free_symbols)
+    if x_sym not in free:
+        # Constant — degenerate but possible.
+        xs = np.linspace(0.0, L_val, nx)
+        ys = np.full_like(xs, float(truncated_concrete))
+    else:
+        f = sp.lambdify(x_sym, truncated_concrete, modules="numpy")
+        xs = np.linspace(0.0, L_val, nx)
+        ys = np.asarray(f(xs), dtype=float)
+
+    return {
+        "kind": "line",
+        "x": xs.tolist(),
+        "u": ys.tolist(),
+        "x_label": "x",
+        "y_label": "u(x)",
+    }

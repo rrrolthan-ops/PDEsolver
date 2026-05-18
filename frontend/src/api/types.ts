@@ -31,11 +31,33 @@ export interface Step {
   level: DetailLevel;
 }
 
-export interface PlotData {
+// Plot payloads from the backend are tagged by `kind`. Legacy responses
+// without a `kind` field are treated as `surface_xt` for backward compat.
+export interface SurfaceXTPlot {
+  kind?: "surface_xt";
   x: number[];
   t: number[];
   u: number[][];
 }
+
+export interface SurfaceXYPlot {
+  kind: "surface_xy";
+  x: number[];
+  y: number[];
+  u: (number | null)[][]; // null = outside the domain (e.g. outside the disc)
+  x_label?: string;
+  y_label?: string;
+}
+
+export interface LinePlot {
+  kind: "line";
+  x: number[];
+  u: number[];
+  x_label?: string;
+  y_label?: string;
+}
+
+export type PlotData = SurfaceXTPlot | SurfaceXYPlot | LinePlot;
 
 export interface ConvergenceData {
   x: number[];
