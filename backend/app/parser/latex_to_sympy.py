@@ -216,9 +216,32 @@ def _normalise(text: str) -> tuple[str, set[str]]:
     return text, seen
 
 
+_GREEK_BACKSLASH = (
+    ("\\theta", "theta"),
+    ("\\phi", "phi"),
+    ("\\rho", "rho"),
+    ("\\xi", "xi"),
+    ("\\eta", "eta"),
+    ("\\alpha", "alpha"),
+    ("\\beta", "beta"),
+    ("\\gamma", "gamma"),
+    ("\\delta", "delta"),
+    ("\\lambda", "lambda"),
+    ("\\mu", "mu"),
+    ("\\sigma", "sigma"),
+    ("\\omega", "omega"),
+    ("\\pi", "pi"),
+    ("\\tau", "tau"),
+)
+
+
 def _normalise_scalar(text: str) -> str:
     text = text.strip()
     text = text.replace("·", "*").replace("⋅", "*")
+    # Strip LaTeX backslashes from common Greek letters so that
+    # sympify gets a plain identifier matching a symbol in KNOWN.
+    for tex, plain in _GREEK_BACKSLASH:
+        text = text.replace(tex, plain)
     text = text.replace("^", "**")
     return text
 

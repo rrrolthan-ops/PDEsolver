@@ -107,6 +107,19 @@ EquationKind = Literal[
 ]
 
 
+Geometry = Literal[
+    "interval",
+    "rectangle",
+    "disk",
+    "halfplane",
+    "line",
+    "halfline",
+    "box",
+    "cylinder",
+    "sphere",
+]
+
+
 class PDEProblem(BaseModel):
     """A fully specified PDE problem.
 
@@ -120,6 +133,19 @@ class PDEProblem(BaseModel):
 
     equation_latex: str = Field(description="LHS - RHS = 0 form or LHS = RHS form.")
     equation_kind: EquationKind = "general"
+
+    #: Optional explicit source term for non-homogeneous problems
+    #: (Poisson `∇²u = f`, forced wave/heat, etc.). When given as a
+    #: separate field the method picker can route to Green-function or
+    #: variation-of-parameters approaches without having to back out the
+    #: RHS from `equation_latex`.
+    source_term: str | None = None
+
+    #: Optional geometry hint. Lets the picker distinguish e.g. Laplace
+    #: on a rectangle (separation of variables in Cartesian) from
+    #: Laplace on a disk (separation in polar). When `None`, the picker
+    #: tries to infer geometry from the shape of `domain`.
+    geometry: Geometry | None = None
 
     domain: Domain
     boundary_conditions: list[BoundaryCondition] = Field(default_factory=list)

@@ -6,26 +6,31 @@ pizarra, no como una calculadora que devuelve la respuesta final.
 
 ## Estado actual
 
-Este repositorio está en **Fase 2-A**. Lo que funciona hoy:
+Este repositorio está en **Fase 2-B**. Lo que funciona hoy:
 
 | EDP | Dominio | Método | Slug |
 |---|---|---|---|
 | Calor `u_t = α² u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `separation_of_variables` |
 | Onda `u_tt = c² u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `sov_wave_1d` |
 | Onda `u_tt = c² u_xx` | `x ∈ ℝ` | Fórmula de D'Alembert | `dalembert_wave_1d` |
-| Laplace `∇²u = 0` | `[0, a] × [0, b]`, Dirichlet | Separación de variables | `sov_laplace_rect` |
+| Laplace `∇²u = 0` | `[0, a] × [0, b]` | Separación de variables | `sov_laplace_rect` |
+| Laplace `∇²u = 0` | disco `r < R` | Separación en polares + Poisson | `sov_laplace_disk` |
+| Poisson `−u'' = f(x)` | `[0, L]`, Dirichlet 0 | Función de Green | `greens_function_1d` |
+| Helmholtz `Δu + k²u = f` | `[0, a] × [0, b]`, Dirichlet 0 | Expansión en autofunciones | `helmholtz_rect` |
+| Telégrafo `u_tt + 2αu_t + βu = c²u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `telegraph_sov` |
 
-Para cada método la salida es la misma estructura de **10 pasos** (Paso 0–9):
+**61 tests pasando** (`pytest -v`).
+
+Cada método produce la misma estructura de **10 pasos** (Paso 0–9):
 planteamiento, clasificación, elección de método, desarrollo (incluyendo
 los tres casos de λ cuando aplica), aplicación de BCs/ICs, solución
 final, verificación simbólica, visualización y lectura física.
 
-Lo que **NO** está todavía: Poisson con función de Green, Laplace en
-disco (Bessel), Helmholtz, telégrafo, Schrödinger, biarmónica,
-coordenadas cilíndricas/esféricas (Bessel/Legendre/armónicos esféricos),
-método de imágenes, método de las características en su versión general.
-Llegan en Fase 2-B/C. Tampoco: lenguaje natural (Fase 3), visión
-(Fase 4), exportación PDF y biblioteca (Fase 5).
+Lo que **NO** está todavía: Schrödinger libre y con pozo, coordenadas
+cilíndricas/esféricas (Bessel/Legendre/armónicos esféricos), método de
+imágenes, biarmónica, método de las características en su versión
+general. Llegan en Fase 2-C. Tampoco: lenguaje natural (Fase 3),
+visión (Fase 4), exportación PDF y biblioteca (Fase 5).
 
 ## Arquitectura
 
@@ -146,6 +151,79 @@ curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d 
 }'
 ```
 
+### Laplace en disco
+
+Dominio circular, dato en la circunferencia:
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "u_{rr} + (1/r)*u_r + (1/r^2)*u_{\\theta\\theta} = 0",
+  "equation_kind": "laplace",
+  "geometry": "disk",
+  "domain": {"x": ["0", "R"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "r=R", "value": "cos(theta)"}
+  ],
+  "initial_conditions": [{"order": 0, "value": "0"}],
+  "parameters": {"R": "positive"}
+}'
+```
+
+### Poisson 1D via función de Green
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "-u_{xx} = f(x)",
+  "equation_kind": "poisson",
+  "source_term": "x*(L - x)",
+  "domain": {"x": ["0", "L"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "x=0", "value": "0"},
+    {"type": "dirichlet", "where": "x=L", "value": "0"}
+  ],
+  "initial_conditions": [{"order": 0, "value": "0"}],
+  "parameters": {"L": "positive"}
+}'
+```
+
+### Helmholtz en rectángulo (con fuente)
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "u_{xx} + u_{yy} + k^2*u = f",
+  "equation_kind": "helmholtz",
+  "source_term": "sin(pi*x/a)*sin(pi*y/b)",
+  "domain": {"x": ["0", "a"], "y": ["0", "b"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "x=0", "value": "0"},
+    {"type": "dirichlet", "where": "x=a", "value": "0"},
+    {"type": "dirichlet", "where": "y=0", "value": "0"},
+    {"type": "dirichlet", "where": "y=b", "value": "0"}
+  ],
+  "initial_conditions": [{"order": 0, "value": "0"}],
+  "parameters": {"a": "positive", "b": "positive", "k": "positive"}
+}'
+```
+
+### Ecuación del telégrafo
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "u_{tt} + 2*alpha*u_t + beta*u = c^2*u_{xx}",
+  "equation_kind": "telegraph",
+  "domain": {"x": ["0", "L"], "t": ["0", "infty"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "x=0", "value": "0"},
+    {"type": "dirichlet", "where": "x=L", "value": "0"}
+  ],
+  "initial_conditions": [
+    {"order": 0, "value": "sin(pi*x/L)"},
+    {"order": 1, "value": "0"}
+  ],
+  "parameters": {"alpha": "positive", "beta": "nonnegative", "c": "positive", "L": "positive"}
+}'
+```
+
 ### Laplace en rectángulo
 
 Tres lados a cero, un lado con dato:
@@ -193,11 +271,9 @@ Tijonov–Samarsky ("Equations of Mathematical Physics").
 
 ## Próximos hitos
 
-- **Fase 2-B**: Poisson con función de Green en geometrías estándar,
-  Laplace en disco (Bessel-Fourier), Helmholtz acotado, telégrafo.
 - **Fase 2-C**: Schrödinger libre y con pozo, coordenadas
   cilíndricas/esféricas (Bessel, Legendre, armónicos esféricos),
-  método de imágenes, biarmónica.
+  método de imágenes, biarmónica, método de las características general.
 - **Fase 3**: entrada por lenguaje natural (clasificador LLM, nunca
   resolvedor).
 - **Fase 4**: pipeline de visión (OpenCV + pix2tex + Nougat + Mathpix

@@ -39,3 +39,4 @@ Thumbs.db
 backend/uploads/
 backend/data/
 *.log
+tsconfig.tsbuildinfo

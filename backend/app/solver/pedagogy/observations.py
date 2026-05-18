@@ -167,6 +167,114 @@ _REGISTRY: dict[str, DidacticObservation] = {
             "el principio del máximo debe ser idénticamente cero)."
         ),
     ),
+    # ---- Laplace on disk --------------------------------------------------
+    "disk_periodicity": DidacticObservation(
+        kind="pitfall",
+        text_md=(
+            "**La 2π-periodicidad es lo que cuantiza los modos.** En el "
+            "rectángulo, las condiciones $X(0) = X(a) = 0$ daban "
+            "$\\lambda_n = (n\\pi/a)^2$. En el disco la \"condición de "
+            "contorno\" angular es **periodicidad**: $\\Phi$ debe valer "
+            "lo mismo en $\\theta$ y en $\\theta + 2\\pi$. Esto fuerza "
+            "$\\sqrt{\\lambda} \\in \\mathbb{Z}$, dando $\\lambda = n^2$ "
+            "para $n = 0, 1, 2, \\ldots$. El **modo $n = 0$ existe** "
+            "(es el término constante) — no descartar."
+        ),
+    ),
+    "disk_origin_regularity": DidacticObservation(
+        kind="pitfall",
+        text_md=(
+            "**Regularidad en el origen.** Las EDO radiales tipo Euler "
+            "tienen dos soluciones: $r^n$ y $r^{-n}$ (o $1$ y $\\ln r$ "
+            "para $n = 0$). En un disco **sólido** descartamos las "
+            "soluciones que divergen en $r = 0$. Si en cambio "
+            "trabajamos en un **anillo** $r_1 < r < r_2$, mantenemos "
+            "ambas y fijamos las constantes con dos condiciones de "
+            "frontera (una en cada circunferencia)."
+        ),
+    ),
+    "disk_mean_value": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**Teorema del valor medio (Gauss).** Si $u$ es armónica "
+            "en un disco de radio $R$ alrededor de $x_0$, entonces "
+            "$u(x_0) = \\frac{1}{2\\pi R} \\oint_{|x - x_0| = R} u\\, ds$. "
+            "Es decir, **el valor en el centro es el promedio sobre el "
+            "círculo de cualquier radio**. Nuestro $a_0/2$ es exactamente "
+            "ese promedio."
+        ),
+    ),
+    # ---- Green's function -------------------------------------------------
+    "green_reciprocity": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**Principio de reciprocidad.** Para operadores autoadjuntos "
+            "(como $-d^2/dx^2$ con Dirichlet 0), la función de Green es "
+            "**simétrica**: $G(x, \\xi) = G(\\xi, x)$. Físicamente: la "
+            "respuesta en $x$ a una fuente en $\\xi$ es igual a la "
+            "respuesta en $\\xi$ a una fuente en $x$. En electricidad "
+            "se conoce como el **teorema de reciprocidad de Lorentz**."
+        ),
+    ),
+    "green_delta_intuition": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**$\\delta(x - \\xi)$ no es una función ordinaria**, es una "
+            "**distribución**: vale cero salvo en $\\xi$ pero su "
+            "\"integral\" es 1. Para construir $G$, lo único que "
+            "necesitamos del delta es que **integrar la EDO en una "
+            "vecindad de $\\xi$ produce un salto unitario en la "
+            "derivada de $G$**. Eso es propiedad 4."
+        ),
+    ),
+    # ---- Helmholtz --------------------------------------------------------
+    "helmholtz_resonance": DidacticObservation(
+        kind="pitfall",
+        text_md=(
+            "**Resonancia destruye la fórmula directa.** "
+            "$c_{mn} = f_{mn}/(k^2 - k_{mn}^2)$ explota cuando $k^2 = "
+            "k_{mn}^2$. Antes de aplicar la fórmula, verifica que $k$ "
+            "**no** sea ninguno de los autovalores del rectángulo. "
+            "Si lo es, el problema sólo tiene solución si "
+            "$f$ es ortogonal a todas las autofunciones "
+            "correspondientes a ese autovalor (alternativa de Fredholm)."
+        ),
+    ),
+    "helmholtz_double_basis": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**Producto de dos bases SL.** Como $X_m(x) = \\sin(m\\pi x/a)$ "
+            "es base ortogonal de $L^2([0, a])$ y $Y_n(y) = \\sin(n\\pi y/b)$ "
+            "lo es de $L^2([0, b])$, sus **productos** "
+            "$\\phi_{mn} = X_m \\cdot Y_n$ forman base ortogonal de "
+            "$L^2([0, a] \\times [0, b])$. Toda función con la "
+            "regularidad apropiada se desarrolla en serie doble."
+        ),
+    ),
+    # ---- Telegraph --------------------------------------------------------
+    "telegraph_three_regimes": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Los tres regímenes son los de un oscilador amortiguado.** "
+            "Sobreamortiguado: la fricción es tan grande que el modo no "
+            "alcanza a oscilar. Crítico: la transición entre ambos "
+            "comportamientos. Subamortiguado: la fricción atenúa pero "
+            "no impide la oscilación. Es el mismo análisis que para un "
+            "resorte con rozamiento, aplicado a cada modo espacial por "
+            "separado."
+        ),
+    ),
+    "telegraph_heaviside": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Condición de Heaviside.** Cuando $\\alpha^2 = \\beta$, la "
+            "señal viaja sin distorsión (sólo se atenúa globalmente con "
+            "el factor $e^{-\\alpha t}$). Fue el descubrimiento crucial "
+            "que permitió mejorar los cables submarinos del siglo XIX: "
+            "balancear la inductancia con la capacitancia para acercarse "
+            "a la condición."
+        ),
+    ),
 }
 
 

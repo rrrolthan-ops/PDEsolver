@@ -89,8 +89,18 @@ def _looks_like_wave_1d_unbounded(p: PDEProblem) -> bool:
 
 
 def _looks_like_laplace_rect(p: PDEProblem) -> bool:
+    """Cartesian rectangle: Laplace, 2D, geometry not disk."""
+    if p.geometry == "disk":
+        return False
     if p.equation_kind == "laplace":
-        return p.domain.x is not None and p.domain.y is not None and p.domain.t is None
+        # Heuristic: rectangle has both x and y bounded by parameters
+        # like "a" and "b" (not "R", not implicit polar).
+        return (
+            p.domain.x is not None
+            and p.domain.y is not None
+            and p.domain.t is None
+            and (p.geometry in (None, "rectangle"))
+        )
     latex = p.equation_latex.replace(" ", "").lower()
     laplace_shapes = (
         "u_{xx}+u_{yy}=0",
@@ -103,6 +113,64 @@ def _looks_like_laplace_rect(p: PDEProblem) -> bool:
         and p.domain.x is not None
         and p.domain.y is not None
         and p.domain.t is None
+        and (p.geometry in (None, "rectangle"))
+    )
+
+
+def _looks_like_laplace_disk(p: PDEProblem) -> bool:
+    """Laplace on a disk: geometry hint set, or BC location uses r=R."""
+    if p.geometry == "disk":
+        return p.equation_kind in ("laplace", "general")
+    # Fallback: a BC `where = "r=R"` is a strong signal of polar geometry.
+    if p.equation_kind == "laplace":
+        for bc in p.boundary_conditions:
+            if bc.where.replace(" ", "").lower().startswith("r="):
+                return True
+    return False
+
+
+def _looks_like_poisson_1d(p: PDEProblem) -> bool:
+    """1D Poisson with a non-zero source on a bounded interval."""
+    if p.equation_kind == "poisson" and _has_1d_interval_domain(p):
+        return True
+    # Heuristic from the source_term field alone.
+    if p.source_term and p.source_term.strip() not in {"", "0"} and _has_1d_interval_domain(p):
+        latex = p.equation_latex.replace(" ", "").lower()
+        if "u_{xx}" in latex or "u''" in latex:
+            return True
+    return False
+
+
+def _looks_like_helmholtz_rect(p: PDEProblem) -> bool:
+    if p.equation_kind == "helmholtz":
+        return p.domain.x is not None and p.domain.y is not None and p.domain.t is None
+    latex = p.equation_latex.replace(" ", "").lower()
+    helmholtz_shapes = (
+        "\\nabla^2u+k^2u=",
+        "nabla^2u+k^2u=",
+        "u_{xx}+u_{yy}+k^2u=",
+    )
+    return (
+        any(s in latex for s in helmholtz_shapes)
+        and p.domain.x is not None
+        and p.domain.y is not None
+    )
+
+
+def _looks_like_telegraph(p: PDEProblem) -> bool:
+    if p.equation_kind == "telegraph":
+        return _has_1d_interval_domain(p) and _all_dirichlet_zero(p)
+    latex = p.equation_latex.replace(" ", "").lower()
+    # Detect any of u_t with alpha (and not heat's pure u_t = alpha² u_xx).
+    has_utt = "u_{tt}" in latex or "u_tt" in latex
+    has_ut = "u_t" in latex
+    has_alpha = "alpha" in latex
+    return (
+        has_utt
+        and has_ut
+        and has_alpha
+        and _has_1d_interval_domain(p)
+        and _all_dirichlet_zero(p)
     )
 
 
@@ -194,15 +262,98 @@ def _choice_laplace_rect(_p: PDEProblem | None = None) -> MethodChoice:
     )
 
 
+def _choice_laplace_disk(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="sov_laplace_disk",
+        rationale_md=(
+            "El dominio es un **disco**, así que la separación natural "
+            "es en **coordenadas polares**. La dirección angular hereda "
+            "una condición de **periodicidad** (no de Dirichlet); la "
+            "dirección radial se reduce a una EDO de Euler."
+        ),
+        alternatives_md=(
+            "**Otras vías:** transformada conforme (mapea el disco al "
+            "semiplano superior, simplifica algunos cálculos), o usar "
+            "directamente la **fórmula integral de Poisson** "
+            "(equivalente a sumar la serie). La separación es la ruta "
+            "pedagógica clásica."
+        ),
+    )
+
+
+def _choice_greens_1d(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="greens_function_1d",
+        rationale_md=(
+            "La EDP tiene **término fuente** $f$ no nulo, así que SOV "
+            "homogénea no aplica directamente. El método de la **función "
+            "de Green** resuelve el problema construyendo el núcleo "
+            "$G(x, \\xi)$ y luego integrando contra $f$. Es la "
+            "estrategia más limpia para Poisson 1D."
+        ),
+        alternatives_md=(
+            "**Eigenfunction expansion** (proyectar $f$ sobre los modos "
+            "y dividir por los autovalores) da exactamente el mismo "
+            "resultado en forma de serie. La función de Green tiene "
+            "la ventaja pedagógica de mostrar la **forma puntual** de "
+            "la respuesta del operador."
+        ),
+    )
+
+
+def _choice_helmholtz_rect(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="helmholtz_rect",
+        rationale_md=(
+            "El Laplaciano con Dirichlet 0 sobre un rectángulo tiene "
+            "una **base ortogonal explícita** de autofunciones. "
+            "Expandir tanto $u$ como $f$ en esa base convierte la EDP "
+            "en una identidad término-a-término entre coeficientes, "
+            "que se invierte trivialmente."
+        ),
+        alternatives_md=(
+            "**Función de Green** del operador $\\Delta + k^2$ daría "
+            "la misma respuesta como una integral. La expansión modal "
+            "tiene la virtud de hacer explícita la estructura de "
+            "**resonancias** que es esencial para entender el problema."
+        ),
+    )
+
+
+def _choice_telegraph(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="telegraph_sov",
+        rationale_md=(
+            "La EDP es **lineal y homogénea**, el dominio espacial es "
+            "un intervalo finito con BCs homogéneas: separación de "
+            "variables aplica. La novedad respecto a wave/heat es la "
+            "**EDO temporal de segundo orden con disipación**, cuyo "
+            "análisis introduce los tres regímenes de un oscilador "
+            "amortiguado."
+        ),
+        alternatives_md=(
+            "**Transformada de Fourier en $x$** (no aplica en dominio "
+            "acotado), o **transformada de Laplace en $t$** (viable, "
+            "pero la inversión devuelve la misma serie con menos "
+            "intuición pedagógica)."
+        ),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Registry — order matters: most specific first
 # ---------------------------------------------------------------------------
 
 _REGISTRY: list[tuple[Callable[[PDEProblem], bool], Callable[[PDEProblem | None], MethodChoice]]] = [
+    # Most specific first.
+    (_looks_like_poisson_1d, _choice_greens_1d),
+    (_looks_like_telegraph, _choice_telegraph),
     (_looks_like_heat_1d, _choice_heat_1d_sov),
     (_looks_like_wave_1d_unbounded, _choice_dalembert),
     (_looks_like_wave_1d_bounded, _choice_wave_1d_sov),
+    (_looks_like_laplace_disk, _choice_laplace_disk),
     (_looks_like_laplace_rect, _choice_laplace_rect),
+    (_looks_like_helmholtz_rect, _choice_helmholtz_rect),
 ]
 
 
@@ -213,9 +364,11 @@ def pick_method(problem: PDEProblem) -> MethodChoice:
             return builder(problem)
     raise NotImplementedError(
         "Ningún método del repertorio actual cubre este problema. "
-        "Repertorio implementado (Fase 1 + Fase 2-A): calor 1D, onda 1D "
-        "(separación y D'Alembert), Laplace en rectángulo. "
-        "Más métodos llegan en Fase 2-B (Poisson/Green, disco, Helmholtz)."
+        "Repertorio implementado (Fase 1 + 2-A + 2-B): calor 1D, onda 1D "
+        "(SOV y D'Alembert), Laplace en rectángulo y en disco, Poisson 1D "
+        "(función de Green), Helmholtz en rectángulo, telégrafo. "
+        "Fase 2-C añadirá: Schrödinger, coordenadas cilíndricas/esféricas, "
+        "método de imágenes."
     )
 
 

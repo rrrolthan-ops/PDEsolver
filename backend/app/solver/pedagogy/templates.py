@@ -552,3 +552,367 @@ def T_laplace_physical_interpretation() -> str:
         "acotados son únicas (corolario del principio del máximo): "
         "lo que obtenemos es la única respuesta posible."
     )
+
+
+# ===========================================================================
+# LAPLACE on a disk — separation in polar coordinates
+# ===========================================================================
+
+def T_statement_laplace_disk() -> str:
+    return (
+        "Resolvemos la **ecuación de Laplace en un disco** de radio $R$: "
+        "$\\Delta u = 0$ para $r < R$, $\\theta \\in [0, 2\\pi)$, con "
+        "el valor de $u$ prescrito en la circunferencia $u(R, \\theta) = "
+        "f(\\theta)$. Físicamente: la temperatura estacionaria de un "
+        "disco cuyo borde está a una temperatura dada, o el potencial "
+        "electrostático en un dominio circular.\n\n"
+        "La geometría circular hace que las **coordenadas polares** sean "
+        "la elección natural. En polares, "
+        "$\\Delta u = u_{rr} + \\tfrac{1}{r} u_r + "
+        "\\tfrac{1}{r^2} u_{\\theta\\theta}$."
+    )
+
+
+def T_disk_method_choice() -> str:
+    return (
+        "**Separación en coordenadas polares.** Probamos "
+        "$u(r, \\theta) = \\Phi(\\theta)\\, P(r)$. Sustituyendo en "
+        "$\\Delta u = 0$ y multiplicando por $r^2 / (P\\Phi)$, "
+        "obtenemos\n\n"
+        "$$\\frac{r^2 P'' + r P'}{P} = -\\frac{\\Phi''}{\\Phi} = \\lambda,$$\n\n"
+        "donde $\\lambda$ es la constante de separación. La elección de "
+        "signo (positiva esta vez, contraria al calor) viene determinada "
+        "por la **2π-periodicidad** que vamos a imponer en $\\Phi$, "
+        "que sólo es compatible con $\\lambda \\geq 0$."
+    )
+
+
+def T_disk_angular_periodicity() -> str:
+    return (
+        "**EDO angular:** $\\Phi'' + \\lambda \\Phi = 0$, con la condición "
+        "implícita de **periodicidad** $\\Phi(\\theta + 2\\pi) = "
+        "\\Phi(\\theta)$ (la coordenada $\\theta$ es angular: $\\theta = 0$ "
+        "y $\\theta = 2\\pi$ son el mismo punto físico).\n\n"
+        "Examinemos los signos posibles de $\\lambda$:\n\n"
+        "- **$\\lambda < 0$:** soluciones exponenciales reales. **No son "
+        "periódicas** (a menos que sean cero). Descartado.\n"
+        "- **$\\lambda = 0$:** $\\Phi(\\theta) = A\\theta + B$. El término "
+        "$A\\theta$ no es periódico, así que $A = 0$. Queda $\\Phi = B$ "
+        "constante: el modo $n = 0$.\n"
+        "- **$\\lambda > 0$:** $\\Phi = A\\cos(\\sqrt{\\lambda}\\,\\theta) + "
+        "B\\sin(\\sqrt{\\lambda}\\,\\theta)$. La periodicidad obliga a "
+        "$\\sqrt{\\lambda} = n$ entero positivo. Autovalores "
+        "$\\lambda_n = n^2$ con autofunciones $\\cos(n\\theta), \\sin(n\\theta)$."
+    )
+
+
+def T_disk_radial_euler() -> str:
+    return (
+        "**EDO radial:** $r^2 P'' + r P' - n^2 P = 0$, la **ecuación de "
+        "Euler** (también llamada equidimensional). Su forma sugiere "
+        "intentar $P(r) = r^p$: sustituyendo, "
+        "$p(p-1) r^p + p r^p - n^2 r^p = 0$, es decir "
+        "$p^2 = n^2$, así que $p = \\pm n$.\n\n"
+        "- **Para $n = 0$:** raíz doble $p = 0$, soluciones $P = 1$ y "
+        "$P = \\ln r$. **Descartamos $\\ln r$** porque diverge en el "
+        "origen; en un disco sólido (sin agujero) la solución debe ser "
+        "regular allí.\n"
+        "- **Para $n \\geq 1$:** soluciones $P = r^n$ y $P = r^{-n}$. "
+        "**Descartamos $r^{-n}$** por la misma razón: explota en el "
+        "centro."
+    )
+
+
+def T_disk_fourier_coefficients() -> str:
+    return (
+        "Aplicamos la condición de frontera $u(R, \\theta) = f(\\theta)$. "
+        "La serie evaluada en $r = R$ se convierte en la **serie de "
+        "Fourier completa** de $f$ en $[0, 2\\pi]$:\n\n"
+        "$$f(\\theta) = \\tfrac{a_0}{2} + \\sum_{n=1}^{\\infty} "
+        "R^n \\bigl[a_n \\cos(n\\theta) + b_n \\sin(n\\theta)\\bigr].$$\n\n"
+        "Usando la **ortogonalidad** estándar de cosenos y senos en "
+        "$[0, 2\\pi]$:"
+    )
+
+
+def T_disk_poisson_kernel_note() -> str:
+    return (
+        "**Nota:** la serie obtenida tiene una forma cerrada notable. "
+        "Sumando explícitamente la geometric series asociada, se llega a "
+        "la **fórmula integral de Poisson**:\n\n"
+        "$$u(r, \\theta) = \\frac{1}{2\\pi} \\int_0^{2\\pi} "
+        "\\frac{R^2 - r^2}{R^2 - 2Rr\\cos(\\theta - \\theta') + r^2}\\, "
+        "f(\\theta')\\, d\\theta'.$$\n\n"
+        "El núcleo $K(r, \\theta - \\theta') = (R^2 - r^2) / "
+        "(R^2 - 2Rr\\cos(\\Delta\\theta) + r^2)$ se llama **núcleo de "
+        "Poisson** y es la **función de Green** del disco para Laplace. "
+        "Esta fórmula muestra que $u(r, \\theta)$ es un **promedio "
+        "ponderado** de los valores de $f$ en la frontera; en el centro "
+        "($r = 0$) el peso se vuelve uniforme y $u(0) = \\tfrac{1}{2\\pi} "
+        "\\int_0^{2\\pi} f(\\theta')\\, d\\theta'$ es el **promedio "
+        "circular** de $f$ — el famoso **teorema del valor medio para "
+        "funciones armónicas**."
+    )
+
+
+def T_disk_physical_interpretation() -> str:
+    return (
+        "La solución $u(r, \\theta)$ describe la **distribución "
+        "estacionaria** dentro del disco. Observaciones:\n\n"
+        "- **Suavizado radial.** El modo angular $n$ entra con peso "
+        "$(r/R)^n$. Cuanto más alta la frecuencia angular, **más rápido** "
+        "se atenúa al alejarse del borde. En el centro, sólo sobrevive "
+        "el modo $n = 0$ (constante).\n"
+        "- **Valor en el centro.** $u(0) = a_0/2 = \\frac{1}{2\\pi}\\int "
+        "f(\\theta') d\\theta'$: el valor en el centro es el promedio del "
+        "dato de frontera. Es el teorema del valor medio.\n"
+        "- **Principio del máximo:** como en el rectángulo, los extremos "
+        "viven en la frontera."
+    )
+
+
+# ===========================================================================
+# POISSON 1D — Green's function
+# ===========================================================================
+
+def T_statement_poisson_1d() -> str:
+    return (
+        "Resolvemos el problema de **Poisson 1D**: una EDP elíptica "
+        "con **término fuente** $f(x)$ y condiciones de Dirichlet "
+        "homogéneas. Físicamente: el desplazamiento estacionario de "
+        "una cuerda tensa con carga distribuida $f(x)$ por unidad de "
+        "longitud y extremos fijos. O el potencial 1D con densidad de "
+        "carga prescrita.\n\n"
+        "Notar que esta es una EDO de segundo orden, no una EDP "
+        "propiamente dicha. La elegimos como **caso piloto del método "
+        "de la función de Green**, porque permite ver el método en su "
+        "forma más limpia antes de generalizarlo a 2D o 3D."
+    )
+
+
+def T_greens_function_motivation() -> str:
+    return (
+        "**Idea del método.** Buscamos un operador lineal $\\mathcal{G}$ "
+        "tal que la solución se escriba como\n\n"
+        "$$u(x) = \\int_0^L G(x, \\xi)\\, f(\\xi)\\, d\\xi.$$\n\n"
+        "El **núcleo** $G(x, \\xi)$ se llama **función de Green** del "
+        "operador. Físicamente, $G(x, \\xi)$ es la respuesta del sistema "
+        "a una **fuente puntual unitaria** localizada en $x = \\xi$: el "
+        "desplazamiento de la cuerda con la masa de $1$ kg colgando en "
+        "el punto $\\xi$. Una vez conocido $G$, **cualquier** distribución "
+        "$f$ se trata por superposición integral."
+    )
+
+
+def T_greens_function_defining_properties() -> str:
+    return (
+        "Caracterizamos $G(x, \\xi)$ con cuatro propiedades:\n\n"
+        "1. **EDO con delta en la fuente:** "
+        "$-\\frac{\\partial^2 G}{\\partial x^2} = \\delta(x - \\xi)$. "
+        "Lejos de $\\xi$ ($x \\neq \\xi$), $G$ satisface "
+        "$G_{xx} = 0$, así que en cada lado de $\\xi$ es **lineal en $x$**.\n"
+        "2. **Condiciones de contorno homogéneas:** "
+        "$G(0, \\xi) = G(L, \\xi) = 0$.\n"
+        "3. **Continuidad** en $x = \\xi$: $G(\\xi^-, \\xi) = G(\\xi^+, \\xi)$.\n"
+        "4. **Salto de la derivada** en $x = \\xi$: integrando la EDO "
+        "alrededor de $\\xi$, $\\partial_x G(\\xi^+) - "
+        "\\partial_x G(\\xi^-) = -1$.\n\n"
+        "Las propiedades 1 y 2 dan dos rectas (una en cada lado), las 3 y 4 "
+        "fijan las cuatro constantes."
+    )
+
+
+def T_greens_function_construction() -> str:
+    return (
+        "Construimos $G$ explícitamente:\n\n"
+        "En $0 < x < \\xi$: $G(x, \\xi) = A x + B$. Por $G(0, \\xi) = 0$, "
+        "$B = 0$, así $G = A x$.\n\n"
+        "En $\\xi < x < L$: $G(x, \\xi) = C x + D$. Por $G(L, \\xi) = 0$, "
+        "$D = -CL$, así $G = C(x - L)$.\n\n"
+        "**Continuidad** en $x = \\xi$: $A \\xi = C(\\xi - L)$.\n\n"
+        "**Salto** de derivadas en $x = \\xi$: derivada por la derecha "
+        "menos derivada por la izquierda = $-1$, es decir $C - A = -1$.\n\n"
+        "Resolviendo el sistema $2\\times2$:\n\n"
+        "$$A = \\frac{L - \\xi}{L}, \\qquad C = -\\frac{\\xi}{L}.$$"
+    )
+
+
+def T_greens_function_final() -> str:
+    return (
+        "La función de Green es por tanto la **tienda de campaña** "
+        "(pieza-lineal, continua, con pico en $\\xi$):\n\n"
+        "$$\\boxed{\\;G(x, \\xi) = \\begin{cases} "
+        "\\dfrac{x(L - \\xi)}{L} & 0 \\leq x \\leq \\xi, \\\\[6pt] "
+        "\\dfrac{\\xi(L - x)}{L} & \\xi \\leq x \\leq L. \\end{cases}\\;}$$\n\n"
+        "Nótese la **simetría** $G(x, \\xi) = G(\\xi, x)$ (es una "
+        "manifestación del **principio de reciprocidad**: la respuesta "
+        "en $x$ a una fuente en $\\xi$ es igual a la respuesta en $\\xi$ "
+        "a una fuente en $x$). Esta simetría se cumple para operadores "
+        "autoadjuntos."
+    )
+
+
+def T_poisson_1d_physical_interpretation() -> str:
+    return (
+        "El método de la función de Green resuelve el problema "
+        "**descomponiendo la fuente en deltas** y sumando las "
+        "respuestas individuales. Cada elemento $f(\\xi)\\, d\\xi$ "
+        "actúa como una fuente puntual de masa $f(\\xi)\\, d\\xi$ en "
+        "$\\xi$, que produce el desplazamiento $G(x, \\xi)\\, f(\\xi)\\, d\\xi$ "
+        "en el punto $x$.\n\n"
+        "Esta misma estrategia se generaliza a 2D y 3D, con funciones de "
+        "Green logarítmicas (Laplace 2D) o coulombianas (Laplace 3D); "
+        "y a operadores con tiempo (calor, onda) usando funciones de "
+        "Green retardadas que incorporan causalidad."
+    )
+
+
+# ===========================================================================
+# HELMHOLTZ on rectangle (inhomogeneous, eigenfunction expansion)
+# ===========================================================================
+
+def T_statement_helmholtz_rect() -> str:
+    return (
+        "Resolvemos la **ecuación de Helmholtz** $\\Delta u + k^2 u = f$ "
+        "en el rectángulo $[0, a] \\times [0, b]$ con $u = 0$ en toda "
+        "la frontera. Físicamente: la **amplitud estacionaria** de una "
+        "membrana rectangular forzada armónicamente a frecuencia $k$, "
+        "o un problema acústico en una cavidad rectangular.\n\n"
+        "Cuando $f \\equiv 0$ se reduce a un **problema de autovalores**: "
+        "buscar los valores de $k^2$ para los que hay solución no "
+        "trivial (los **modos normales** de la membrana). Cuando "
+        "$f \\neq 0$, hay solución para cualquier $k^2$ **fuera** del "
+        "espectro de autovalores; en resonancia ($k^2 = k_{mn}^2$) el "
+        "problema es singular."
+    )
+
+
+def T_helmholtz_eigenpairs() -> str:
+    return (
+        "**Paso clave: identificar el espectro.** Las autofunciones del "
+        "Laplaciano con Dirichlet 0 en el rectángulo son\n\n"
+        "$$\\phi_{mn}(x, y) = \\sin\\!\\bigl(\\tfrac{m\\pi x}{a}\\bigr)"
+        "\\sin\\!\\bigl(\\tfrac{n\\pi y}{b}\\bigr), \\quad m, n \\geq 1,$$\n\n"
+        "con autovalores\n\n"
+        "$$k_{mn}^2 = \\left(\\tfrac{m\\pi}{a}\\right)^2 "
+        "+ \\left(\\tfrac{n\\pi}{b}\\right)^2.$$\n\n"
+        "Se verifica: $\\Delta \\phi_{mn} = -k_{mn}^2 \\phi_{mn}$. "
+        "Las $\\phi_{mn}$ forman base ortogonal de $L^2([0,a]\\times[0,b])$ "
+        "(producto de dos bases SL unidimensionales)."
+    )
+
+
+def T_helmholtz_expansion() -> str:
+    return (
+        "**Expansión de la solución y de la fuente.** Escribimos\n\n"
+        "$$u(x, y) = \\sum_{m, n \\geq 1} c_{mn}\\, \\phi_{mn}(x, y),"
+        "\\qquad f(x, y) = \\sum_{m, n \\geq 1} f_{mn}\\, \\phi_{mn}(x, y).$$\n\n"
+        "Aplicando $\\Delta + k^2$ a la primera serie:\n\n"
+        "$$\\sum_{m,n} c_{mn}(k^2 - k_{mn}^2)\\, \\phi_{mn} = "
+        "\\sum_{m,n} f_{mn}\\, \\phi_{mn}.$$\n\n"
+        "Igualando coeficientes:\n\n"
+        "$$c_{mn} = \\frac{f_{mn}}{k^2 - k_{mn}^2}, \\quad "
+        "\\text{siempre que } k^2 \\notin \\{k_{mn}^2\\}.$$"
+    )
+
+
+def T_helmholtz_resonance() -> str:
+    return (
+        "**Resonancia.** Si $k^2$ coincide con algún autovalor "
+        "$k_{m_0 n_0}^2$, el denominador $c_{m_0 n_0}$ explota: el "
+        "problema no tiene solución acotada salvo que $f$ sea ortogonal "
+        "a $\\phi_{m_0 n_0}$ (condición de **alternativa de Fredholm**). "
+        "Físicamente: forzar la membrana a una frecuencia exactamente "
+        "igual a uno de sus modos provoca crecimiento sin límite, como "
+        "un columpio que se mece a su propia frecuencia natural."
+    )
+
+
+def T_helmholtz_physical_interpretation() -> str:
+    return (
+        "La solución es una **superposición ponderada de modos normales**, "
+        "donde cada peso depende de qué tan cerca esté $k^2$ del autovalor "
+        "correspondiente. Lejos de cualquier resonancia, todos los modos "
+        "contribuyen modestamente. Cerca de una resonancia $k^2 \\approx "
+        "k_{mn}^2$, ese modo domina enormemente: es el efecto de "
+        "amplificación selectiva que explota cualquier instrumento "
+        "musical o cavidad acústica."
+    )
+
+
+# ===========================================================================
+# TELEGRAPH equation (damped wave)
+# ===========================================================================
+
+def T_statement_telegraph() -> str:
+    return (
+        "La **ecuación del telégrafo** "
+        "$u_{tt} + 2\\alpha u_t + \\beta u = c^2 u_{xx}$ "
+        "(con $\\alpha, \\beta \\geq 0$) modela la transmisión de "
+        "señales en una línea de transmisión real, donde $u$ "
+        "representa el voltaje (o la corriente). Los parámetros tienen "
+        "interpretación física directa: $\\alpha$ es disipación "
+        "(resistencia + fugas), $\\beta$ es \"masa efectiva\" "
+        "(producto de la inductancia y la conductancia), y $c$ es la "
+        "velocidad nominal de propagación.\n\n"
+        "Es una **interpolación** entre la ecuación de onda "
+        "($\\alpha = \\beta = 0$) y la del calor "
+        "($\\beta \\to \\infty$ tras un reescalado). Heaviside la "
+        "estudió para explicar por qué los telégrafos transatlánticos "
+        "se distorsionaban menos de lo que se temía."
+    )
+
+
+def T_telegraph_temporal_ode() -> str:
+    return (
+        "Tras la separación de variables $u = X(x) T(t)$ y el "
+        "análisis espacial usual (idéntico al del calor: $X_n = "
+        "\\sin(n\\pi x/L)$, $\\lambda_n = (n\\pi/L)^2$), la EDO temporal es\n\n"
+        "$$T_n'' + 2\\alpha\\, T_n' + (\\beta + c^2 \\lambda_n)\\, T_n = 0.$$\n\n"
+        "Es una EDO lineal de segundo orden con coeficientes constantes. "
+        "Su ecuación característica es\n\n"
+        "$$r^2 + 2\\alpha\\, r + (\\beta + c^2 \\lambda_n) = 0,$$\n\n"
+        "con raíces\n\n"
+        "$$r_\\pm = -\\alpha \\pm \\sqrt{\\alpha^2 - \\beta - c^2 \\lambda_n}.$$\n\n"
+        "El signo del **discriminante temporal** $\\Delta_n = "
+        "\\alpha^2 - \\beta - c^2 \\lambda_n$ define **tres regímenes** "
+        "físicamente distintos."
+    )
+
+
+def T_telegraph_three_regimes() -> str:
+    return (
+        "Para cada modo espacial $n$ tenemos uno de estos tres comportamientos:\n\n"
+        "- **Sobreamortiguado ($\\Delta_n > 0$):** "
+        "$T_n(t) = e^{-\\alpha t}(A_n e^{\\sqrt{\\Delta_n}\\, t} + "
+        "B_n e^{-\\sqrt{\\Delta_n}\\, t})$. El modo decae sin oscilar.\n"
+        "- **Críticamente amortiguado ($\\Delta_n = 0$):** "
+        "$T_n(t) = e^{-\\alpha t}(A_n + B_n t)$. Decaimiento lo más rápido "
+        "posible sin oscilar.\n"
+        "- **Subamortiguado ($\\Delta_n < 0$):** "
+        "$T_n(t) = e^{-\\alpha t}\\bigl[A_n \\cos(\\omega_n t) + "
+        "B_n \\sin(\\omega_n t)\\bigr]$ con $\\omega_n = \\sqrt{-\\Delta_n}$. "
+        "Oscila con frecuencia desplazada y amplitud decreciente.\n\n"
+        "Para un modo dado, el régimen lo decide la magnitud relativa "
+        "de la **disipación** $\\alpha$ frente a la **rigidez efectiva** "
+        "$\\beta + c^2 \\lambda_n$. Los modos altos (grande $\\lambda_n$) "
+        "tienden a estar subamortiguados (oscilan)."
+    )
+
+
+def T_telegraph_physical_interpretation() -> str:
+    return (
+        "La solución es una mezcla de **decaimiento** (factor $e^{-\\alpha t}$, "
+        "común a todos los modos) y **oscilación** (modos subamortiguados). "
+        "Lecturas físicas:\n\n"
+        "- Si $\\alpha$ es **grande**, dominan los modos sobreamortiguados: "
+        "comportamiento difusivo, parecido al calor.\n"
+        "- Si $\\alpha$ es **pequeño** comparado con $c\\sqrt{\\lambda_n}$, "
+        "el modo $n$ oscila a frecuencia $\\omega_n$ con amortiguamiento "
+        "lento: comportamiento ondulatorio, parecido a la cuerda.\n"
+        "- La **condición de Heaviside** $\\alpha^2 = \\beta$ (resistencia "
+        "y fuga balanceadas) hace que $\\Delta_n = -c^2 \\lambda_n < 0$ "
+        "para todo $n$: todos los modos oscilan con la **misma frecuencia "
+        "espacial** desplazada, y la señal viaja sin distorsión, sólo "
+        "atenuándose globalmente — el descubrimiento clave de Heaviside."
+    )

@@ -14,13 +14,21 @@ import sympy as sp
 x, y, z = sp.symbols("x y z", real=True)
 t = sp.symbols("t", real=True, nonnegative=True)
 
+# Polar / cylindrical / spherical independent variables.
+r = sp.symbols("r", nonnegative=True)
+theta = sp.symbols("theta", real=True)
+phi = sp.symbols("phi", real=True)
+
 # Common physical parameters with positivity assumptions.
 L = sp.symbols("L", positive=True)
+R = sp.symbols("R", positive=True)
 alpha = sp.symbols("alpha", positive=True)
+beta = sp.symbols("beta", positive=True)
 c = sp.symbols("c", positive=True)
 k = sp.symbols("k", positive=True)
 hbar = sp.symbols("hbar", positive=True)
 m = sp.symbols("m", positive=True)
+a, b = sp.symbols("a b", positive=True)
 
 # Separation constant and Sturm-Liouville integer index.
 lam = sp.symbols("lambda", real=True)
@@ -39,12 +47,19 @@ KNOWN: dict[str, sp.Symbol] = {
     "y": y,
     "z": z,
     "t": t,
+    "r": r,
+    "theta": theta,
+    "phi": phi,
     "L": L,
+    "R": R,
     "alpha": alpha,
+    "beta": beta,
     "c": c,
     "k": k,
     "hbar": hbar,
     "m": m,
+    "a": a,
+    "b": b,
     "lambda": lam,
     "n": n,
     "pi": sp.pi,
