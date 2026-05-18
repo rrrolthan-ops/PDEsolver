@@ -1,5 +1,11 @@
 """Pydantic schemas shared across the API and the solver."""
 
+from .library import (
+    LibraryItem,
+    LibraryListItem,
+    LibrarySaveRequest,
+    LibrarySource,
+)
 from .problem import (
     BoundaryCondition,
     Domain,
@@ -15,6 +21,10 @@ __all__ = [
     "DetailLevel",
     "Domain",
     "InitialCondition",
+    "LibraryItem",
+    "LibraryListItem",
+    "LibrarySaveRequest",
+    "LibrarySource",
     "PDEProblem",
     "SolutionResponse",
     "Step",

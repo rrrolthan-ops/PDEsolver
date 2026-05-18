@@ -1,12 +1,13 @@
 import { useState } from "react";
+import { Library } from "./pages/Library";
 import { Solve } from "./pages/Solve";
 import { useTheme } from "./theme/useTheme";
 
-type InputMode = "write" | "natural" | "image";
+type Tab = "write" | "natural" | "image" | "library";
 
 export default function App() {
   const { theme, toggle } = useTheme();
-  const [tab, setTab] = useState<InputMode>("write");
+  const [tab, setTab] = useState<Tab>("write");
 
   return (
     <div className={`app theme-${theme}`}>
@@ -47,18 +48,28 @@ export default function App() {
         >
           Subir foto
         </button>
+        <button
+          className={`tab ${tab === "library" ? "tab-active" : ""}`}
+          onClick={() => setTab("library")}
+          style={{ marginLeft: "auto" }}
+        >
+          Biblioteca
+        </button>
       </nav>
 
       <main className="app-main">
-        <Solve mode={tab} />
+        {tab === "library" ? (
+          <Library />
+        ) : (
+          <Solve mode={tab as "write" | "natural" | "image"} />
+        )}
       </main>
 
       <footer className="app-footer">
         <small>
-          Fase 4 — las tres modalidades de entrada (manual, lenguaje natural,
-          imagen) están operativas. La extracción visual usa
-          claude-haiku-4-5 como clasificador; la resolución matemática
-          siempre es simbólica.
+          Fase 5 — biblioteca local + exportación a PDF disponibles. Resuelve
+          un problema, guárdalo en la biblioteca o expórtalo como PDF para
+          estudio.
         </small>
       </footer>
     </div>

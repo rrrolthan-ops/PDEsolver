@@ -311,3 +311,154 @@ html, body {
   padding: 12px 16px;
   margin-bottom: 16px;
 }
+
+/* --- Library page ------------------------------------------------------- */
+
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.library-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s, border-color 0.1s;
+}
+
+.library-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.library-card h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-family: var(--font-ui);
+}
+
+.library-card .meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+}
+
+.library-card .thumb {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background: var(--surface-2);
+}
+
+.library-card .thumb-placeholder {
+  width: 100%;
+  height: 110px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
+  padding: 0 12px;
+}
+
+.library-tags {
+  display: inline-block;
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-family: var(--font-ui);
+  margin-right: 4px;
+}
+
+.library-filter-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.library-filter-bar select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: var(--text);
+  font: inherit;
+}
+
+/* --- Print / Export to PDF --------------------------------------------- */
+
+/* The Export button uses window.print(). The CSS below makes the printed
+ * output presentable: drop the dev chrome (tabs, header buttons), pin
+ * widths sensibly, and let step cards break cleanly across pages. */
+@media print {
+  @page {
+    size: A4;
+    margin: 1.5cm 1.4cm;
+  }
+  html,
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+  }
+  .app {
+    max-width: none;
+    padding: 0;
+  }
+  /* Hide everything the student doesn't need on paper. */
+  .app-header .theme-toggle,
+  .tabs,
+  .app-footer,
+  .solve-button,
+  .detail-slider,
+  .library-filter-bar,
+  .panel input,
+  .panel textarea,
+  .error-banner,
+  [data-no-print="true"] {
+    display: none !important;
+  }
+  /* Side-by-side grids stack to single column on paper. */
+  .solve-grid {
+    display: block;
+  }
+  .panel {
+    border: none;
+    padding: 0;
+    margin: 0 0 12px;
+  }
+  .step-card {
+    border: 1px solid #ccc;
+    border-left: 3px solid black;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .observation {
+    background: white !important;
+    border-left-color: #444 !important;
+  }
+  /* Plotly charts can't be reliably rendered as bitmaps when printing —
+   * hide the surface but keep the convergence panel since it's smaller
+   * and SVG-friendly. */
+  .js-plotly-plot:has([data-title*="u(x"]) {
+    display: none !important;
+  }
+}
+

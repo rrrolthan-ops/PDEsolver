@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { solveProblem } from "../api/client";
+import { saveLibraryEntry, solveProblem } from "../api/client";
 import type {
   BoundaryCondition,
   DetailLevel,
   InitialCondition,
+  LibrarySource,
   PDEProblem,
   SolutionResponse,
   VisionExtractionResult,
@@ -63,6 +64,18 @@ export function Solve({ mode }: Props) {
     null,
   );
 
+  // Provenance for the currently displayed result — used by the Save flow.
+  const [lastSolved, setLastSolved] = useState<{
+    problem: PDEProblem;
+    source: LibrarySource;
+    image_data_url: string | null;
+  } | null>(null);
+
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
   const buildManualProblem = (): PDEProblem => {
     const bcs: BoundaryCondition[] = [
       { type: "dirichlet", where: `x=${xLow}`, value: bcLeft },
@@ -79,13 +92,20 @@ export function Solve({ mode }: Props) {
     };
   };
 
-  const handleSolve = async (problem: PDEProblem) => {
+  const handleSolve = async (
+    problem: PDEProblem,
+    provenance: { source: LibrarySource; image_data_url: string | null },
+  ) => {
     setLoading(true);
     setError(null);
     setResult(null);
+    setSaveStatus("idle");
+    setSaveMessage(null);
+    setLastSolved(null);
     try {
       const resp = await solveProblem(problem);
       setResult(resp);
+      setLastSolved({ problem, ...provenance });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -93,12 +113,50 @@ export function Solve({ mode }: Props) {
     }
   };
 
-  const handleSolveManual = () => handleSolve(buildManualProblem());
+  const handleSolveManual = () =>
+    handleSolve(buildManualProblem(), {
+      source: "manual",
+      image_data_url: null,
+    });
   const handleSolvePending = () => {
-    if (pendingNL) handleSolve(pendingNL.problem);
+    if (pendingNL)
+      handleSolve(pendingNL.problem, {
+        source: "natural",
+        image_data_url: null,
+      });
   };
   const handleSolvePendingImage = () => {
-    if (pendingImage) handleSolve(pendingImage.problem);
+    if (pendingImage)
+      handleSolve(pendingImage.problem, {
+        source: "vision",
+        image_data_url: pendingImage.image_preview_data_url,
+      });
+  };
+
+  const handleSaveToLibrary = async () => {
+    if (!result || !lastSolved) return;
+    setSaveStatus("saving");
+    setSaveMessage(null);
+    try {
+      const saved = await saveLibraryEntry({
+        problem: lastSolved.problem,
+        solution: result,
+        source: lastSolved.source,
+        image_data_url: lastSolved.image_data_url,
+      });
+      setSaveStatus("saved");
+      setSaveMessage(`Guardado como "${saved.name}".`);
+    } catch (e) {
+      setSaveStatus("error");
+      setSaveMessage(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  const handleExportPdf = () => {
+    // Browser-driven: the print stylesheet hides the dev chrome and lays
+    // out the step cards as A4-friendly blocks. The user picks
+    // "Save as PDF" in the system print dialog. No backend involvement.
+    window.print();
   };
 
   const pushIntoManualEditor = (problem: PDEProblem) => {
@@ -228,6 +286,48 @@ export function Solve({ mode }: Props) {
 
       {result && (
         <section className="results-section">
+          <div
+            data-no-print="true"
+            style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}
+          >
+            <button
+              type="button"
+              className="solve-button"
+              onClick={handleSaveToLibrary}
+              disabled={saveStatus === "saving" || !lastSolved}
+              style={{
+                background: "transparent",
+                color: "var(--accent)",
+                border: "1px solid var(--accent)",
+              }}
+            >
+              {saveStatus === "saving"
+                ? "Guardando…"
+                : saveStatus === "saved"
+                  ? "Guardado ✓"
+                  : "Guardar en biblioteca"}
+            </button>
+            <button
+              type="button"
+              className="solve-button"
+              onClick={handleExportPdf}
+            >
+              Exportar a PDF
+            </button>
+            {saveMessage && (
+              <span
+                style={{
+                  fontSize: 13,
+                  color:
+                    saveStatus === "error"
+                      ? "var(--pitfall)"
+                      : "var(--text-muted)",
+                }}
+              >
+                {saveMessage}
+              </span>
+            )}
+          </div>
           <h2 style={{ fontFamily: "var(--font-ui)" }}>
             Desarrollo paso a paso
           </h2>

@@ -105,3 +105,30 @@ export interface VisionExtractionResult {
   image_preview_data_url: string | null;
   notes: string | null;
 }
+
+// --- Library ------------------------------------------------------------
+
+export type LibrarySource = "manual" | "natural" | "vision";
+
+export interface LibrarySaveRequest {
+  name?: string | null;
+  problem: PDEProblem;
+  solution: SolutionResponse;
+  source: LibrarySource;
+  image_data_url?: string | null;
+}
+
+export interface LibraryListItem {
+  id: string;
+  name: string;
+  equation_kind: string;
+  method_slug: string;
+  source: LibrarySource;
+  image_data_url: string | null;
+  created_at: string;
+}
+
+export interface LibraryItem extends LibraryListItem {
+  problem: PDEProblem;
+  solution: SolutionResponse;
+}

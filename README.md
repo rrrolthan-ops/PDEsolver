@@ -6,23 +6,33 @@ pizarra, no como una calculadora que devuelve la respuesta final.
 
 ## Estado actual
 
-Este repositorio está en **Fase 4**. Lo que funciona hoy:
+Este repositorio está en **Fase 5**. Lo que funciona hoy:
 
 **Entradas soportadas:**
 - **Manual (LaTeX)** — disponible desde Fase 1.
 - **Lenguaje natural** (Fase 3) — español o inglés. Capa determinista
   de plantillas + clasificador Claude opcional. El LLM **sólo
   clasifica**, nunca resuelve.
-- **Imagen** (NUEVO en Fase 4) — sube una foto JPG/PNG/WEBP/HEIC de
-  una página de libro, examen, pizarra o apunte. `claude-haiku-4-5`
-  con visión lee la imagen, transcribe la fórmula como LaTeX, y la
-  estructura como `PDEProblem` en una sola llamada. La transcripción
-  se muestra **lado a lado con la foto original** para que el usuario
-  confirme antes de resolver.
+- **Imagen** (Fase 4) — sube una foto JPG/PNG/WEBP/HEIC de una página
+  de libro, examen, pizarra o apunte. `claude-haiku-4-5` con visión
+  lee la imagen, transcribe la fórmula como LaTeX, y la estructura
+  como `PDEProblem` en una sola llamada. La transcripción se muestra
+  **lado a lado con la foto original** para que el usuario confirme
+  antes de resolver.
 
 Las tres modalidades convergen en el mismo `PDEProblem` canónico
 antes del solver, así que la calidad de la resolución es idéntica
 independientemente del modo de entrada.
+
+**Postprocesado** (NUEVO en Fase 5):
+- **Biblioteca local** — guarda problemas resueltos en SQLite con
+  miniatura (cuando proviene de imagen), filtro por tipo de EDP,
+  apertura/eliminación y vista de detalle completa.
+- **Exportación a PDF** — botón "Exportar a PDF" en la página de
+  solución y en cada entrada de la biblioteca. Usa `window.print()` +
+  CSS de impresión para producir un documento A4 limpio (sin la
+  cabecera/pestañas/sliders del editor) listo para imprimir o guardar
+  como PDF desde el navegador.
 
 **Métodos de resolución:**
 
@@ -44,7 +54,7 @@ independientemente del modo de entrada.
 | Transporte `u_t + c·u_x = 0` | `x ∈ ℝ` | Características | `characteristics_transport_1d` |
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 
-**132 tests pasando** (`pytest -v`).
+**140 tests pasando** (`pytest -v`).
 
 Cada método produce la misma estructura de **10 pasos** (Paso 0–9):
 planteamiento, clasificación, elección de método, desarrollo (incluyendo
@@ -141,6 +151,35 @@ patrones deterministas no cubren el enunciado), exporta:
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
 ```
+
+### Biblioteca
+
+Guarda y consulta problemas resueltos en una base SQLite local:
+
+```bash
+# Guardar (después de un POST /solve)
+curl -X POST http://localhost:8000/library \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Mi calor 1D favorito",
+    "problem": { ... PDEProblem completo ... },
+    "solution": { ... SolutionResponse completo ... },
+    "source": "manual"
+  }'
+
+# Listar (con filtro opcional)
+curl http://localhost:8000/library
+curl "http://localhost:8000/library?equation_kind=heat"
+
+# Recuperar / eliminar
+curl http://localhost:8000/library/<id>
+curl -X DELETE http://localhost:8000/library/<id>
+```
+
+La base se ubica en `backend/data/pdesolver.db` (configurable vía
+`DATABASE_URL`). Los problemas que vinieron de imagen guardan la
+miniatura como `image_data_url` para mostrarse en la cuadrícula de la
+biblioteca.
 
 ### Imagen (foto, escaneo)
 
@@ -457,14 +496,21 @@ Tijonov–Samarsky ("Equations of Mathematical Physics").
 
 ## Próximos hitos
 
-- **Fase 5**: exportación a PDF, biblioteca de problemas, pulido,
-  plots para los métodos que hoy no los tienen (disco, Green 1D,
-  Helmholtz, imágenes, biarmónica, bola, tambor).
-- **Extensiones de visión** (sin fase numerada): soporte de PDF
-  multipágina vía `pdf2image`+Poppler, backend pix2tex/Nougat para
-  uso offline, soporte premium opcional Mathpix.
-- **Extensiones del solver** (sin fase numerada): armónicos esféricos
-  completos, modos angulares del tambor, Schrödinger con $V \neq 0$.
+Las fases numeradas (1, 2-A, 2-B, 2-C, 2-D, 3, 4, 5) están todas
+entregadas. Posibles extensiones sin fase numerada:
+
+- **Plots para todos los métodos**: hoy los métodos en geometría no
+  cartesiana (disco, bola, semiplano) y los métodos sin solución
+  graficable estándar (Green 1D, Helmholtz, biarmónica) no muestran
+  superficie. Implementar muestreo polar→cartesiano y plot 1D.
+- **Visión avanzada**: soporte de PDF multipágina vía
+  `pdf2image`+Poppler, backend pix2tex/Nougat para uso offline,
+  soporte premium opcional Mathpix.
+- **Solver avanzado**: armónicos esféricos completos, modos angulares
+  del tambor, Schrödinger con $V \neq 0$, transformadas de Fourier y
+  Laplace como métodos explícitos.
+- **PDF server-side**: `/library/{id}/pdf` con WeasyPrint o Playwright
+  para PDFs reproducibles sin pasar por el navegador.
 
 ## Licencia
 
