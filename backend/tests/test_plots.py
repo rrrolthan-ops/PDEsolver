@@ -92,6 +92,37 @@ def _heat_disk_problem(f_r: str) -> PDEProblem:
     )
 
 
+def _halfplane_problem(f_x: str) -> PDEProblem:
+    return PDEProblem(
+        equation_latex="u_{xx} + u_{yy} = 0",
+        equation_kind="laplace",
+        geometry="halfplane",
+        domain=Domain(x=["-infty", "infty"], y=["0", "infty"]),
+        boundary_conditions=[
+            BoundaryCondition(type="dirichlet", where="y=0", value=f_x),
+        ],
+        initial_conditions=[InitialCondition(order=0, value="0")],
+        parameters={},
+    )
+
+
+def _helmholtz_problem(source: str | None) -> PDEProblem:
+    return PDEProblem(
+        equation_latex=r"u_{xx} + u_{yy} + k^2 * u = f(x, y)",
+        equation_kind="helmholtz",
+        source_term=source,
+        domain=Domain(x=["0", "a"], y=["0", "b"]),
+        boundary_conditions=[
+            BoundaryCondition(type="dirichlet", where="x=0", value="0"),
+            BoundaryCondition(type="dirichlet", where="x=a", value="0"),
+            BoundaryCondition(type="dirichlet", where="y=0", value="0"),
+            BoundaryCondition(type="dirichlet", where="y=b", value="0"),
+        ],
+        initial_conditions=[InitialCondition(order=0, value="0")],
+        parameters={"a": "positive", "b": "positive", "k": "positive"},
+    )
+
+
 def _ball_problem(f_theta: str) -> PDEProblem:
     return PDEProblem(
         equation_latex=r"\nabla^2 u = 0",
@@ -191,3 +222,60 @@ def test_ball_plot_is_surface_xy_meridional():
     assert top is not None and bottom is not None
     # Antisymmetric in z: opposite signs.
     assert top * bottom < 0
+
+
+def test_halfplane_constant_boundary():
+    """f = 1 on the boundary ⇒ u ≡ 1 everywhere (Poisson kernel integrates to 1)."""
+    resp = solve(_halfplane_problem("1"))
+    plot = resp.plot_data
+    assert plot is not None
+    assert plot.get("kind") == "surface_xy"
+    n = len(plot["u"])
+    m = len(plot["u"][0])
+    # Every sampled point should be ~1.0.
+    center = plot["u"][n // 2][m // 2]
+    assert center is not None
+    assert abs(center - 1.0) < 1e-6
+
+
+def test_halfplane_lorentzian_boundary():
+    """f(x) = 1/(1+x²) ⇒ requires the numerical Poisson convolution."""
+    resp = solve(_halfplane_problem("1/(1 + x^2)"))
+    plot = resp.plot_data
+    assert plot is not None
+    assert plot.get("kind") == "surface_xy"
+    n = len(plot["u"])
+    m = len(plot["u"][0])
+    # Closer to the wall, the response at x = 0 should be close to f(0) = 1.
+    # We don't assert the exact closed form (Lorentzian-of-y) — just
+    # that the value is finite and in a sensible range.
+    near_wall = plot["u"][0][m // 2]
+    assert near_wall is not None
+    assert 0.5 < near_wall < 1.2
+
+
+def test_helmholtz_homogeneous_plot_is_eigenfunction():
+    """No source → solver emits φ_11; plot should render it cleanly."""
+    resp = solve(_helmholtz_problem(None))
+    plot = resp.plot_data
+    assert plot is not None
+    assert plot.get("kind") == "surface_xy"
+    n = len(plot["u"])
+    # φ_11 = sin(πx/a) sin(πy/b) with a=b=1: max ≈ 1 at (0.5, 0.5).
+    center = plot["u"][n // 2][n // 2]
+    assert center is not None
+    assert center > 0.9
+
+
+def test_helmholtz_inhomogeneous_plot_finite():
+    """Source = φ_11 ⇒ solution is bounded at k² = 30 (safely between modes)."""
+    resp = solve(_helmholtz_problem("sin(pi*x/a)*sin(pi*y/b)"))
+    plot = resp.plot_data
+    assert plot is not None
+    assert plot.get("kind") == "surface_xy"
+    # Every value should be finite (k² = 30 is between the first two
+    # eigenvalues so no resonance blowup).
+    import math
+    for row in plot["u"]:
+        for v in row:
+            assert v is None or math.isfinite(v)

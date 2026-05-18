@@ -54,7 +54,9 @@ independientemente del modo de entrada.
 | Transporte `u_t + c·u_x = 0` | `x ∈ ℝ` | Características | `characteristics_transport_1d` |
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 
-**146 tests pasando** (`pytest -v`).
+**150 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
+visualización**: superficies en `(x, t)` o `(x, y)`, gráficos 1D, o
+cortes meridionales según la geometría.
 
 Cada método produce la misma estructura de **10 pasos** (Paso 0–9):
 planteamiento, clasificación, elección de método, desarrollo (incluyendo
@@ -499,12 +501,6 @@ Tijonov–Samarsky ("Equations of Mathematical Physics").
 Las fases numeradas (1, 2-A, 2-B, 2-C, 2-D, 3, 4, 5) están todas
 entregadas. Posibles extensiones sin fase numerada:
 
-- **Plots avanzados restantes**: el semiplano (imágenes) y Helmholtz
-  inhomogéneo todavía no se grafican; el primero necesita convolución
-  numérica con el núcleo de Poisson y el segundo requiere elegir un
-  `k` "seguro" (alejado del espectro). El resto ya tiene gráfico: 1D
-  para Green/viga, polar→cartesiano para disco (Laplace, calor,
-  tambor), corte meridional para la bola.
 - **Visión avanzada**: soporte de PDF multipágina vía
   `pdf2image`+Poppler, backend pix2tex/Nougat para uso offline,
   soporte premium opcional Mathpix.

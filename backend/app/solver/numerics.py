@@ -480,3 +480,210 @@ def sample_meridional_slice(
         "x_label": "x",
         "y_label": "z",
     }
+
+
+# ---------------------------------------------------------------------------
+# Half-plane Poisson kernel (numerical convolution)
+# ---------------------------------------------------------------------------
+
+
+def sample_halfplane_poisson(
+    expr: sp.Basic,
+    *,
+    x_sym: sp.Symbol,
+    y_sym: sp.Symbol,
+    parameter_values: dict[sp.Symbol, float] | None = None,
+    x_range: tuple[float, float] = (-3.0, 3.0),
+    y_range: tuple[float, float] = (0.05, 2.0),
+    n_grid: tuple[int, int] = (50, 35),
+    quad_limit: float = 30.0,
+) -> dict:
+    """Render `u(x, y)` for the half-plane Dirichlet problem.
+
+    For most boundary data `f`, the solution is
+
+        u(x, y) = (y / π) ∫_{-∞}^{∞} f(x') / ((x - x')² + y²) dx',
+
+    which the `images_halfplane` solver returns as an unevaluated
+    `sp.Integral`. We handle both shapes that solver can emit:
+
+    - **Constant fast-path** (when `f` had no `xp` dependence — the
+      Poisson kernel integrates to `f` itself). Lambdify and render
+      as a flat surface.
+    - **Integral form**: lambdify the integrand over `(x, y, xp)` and
+      run `scipy.integrate.quad` for every grid point. The Poisson
+      integrand decays like `1/xp²` so truncating at `±quad_limit`
+      is fine for the boundary profiles in our examples (Gaussian,
+      Lorentzian, etc.).
+    """
+    parameter_values = parameter_values or {}
+    xs = np.linspace(*x_range, n_grid[0])
+    ys = np.linspace(*y_range, n_grid[1])
+
+    expr_concrete = expr.subs(parameter_values)
+
+    if not expr_concrete.has(sp.Integral):
+        # Closed-form case (f was constant or otherwise free of xp).
+        free = expr_concrete.free_symbols
+        bound_args = tuple(s for s in (x_sym, y_sym) if s in free)
+        f = sp.lambdify(bound_args, expr_concrete, modules=["scipy", "numpy"])
+        X, Y = np.meshgrid(xs, ys, indexing="xy")
+        if len(bound_args) == 0:
+            U = np.full_like(X, float(expr_concrete))
+        elif bound_args == (x_sym,):
+            U = np.asarray(f(X), dtype=float)
+        elif bound_args == (y_sym,):
+            U = np.asarray(f(Y), dtype=float)
+        else:
+            U = np.asarray(f(X, Y), dtype=float)
+        return _wrap_xy(U, xs, ys)
+
+    integral = _find_integral(expr_concrete)
+    if integral is None:
+        raise ValueError("expected an sp.Integral somewhere in the expression")
+
+    integrand = integral.function
+    xp_var = integral.limits[0][0]
+    g = sp.lambdify(
+        (x_sym, y_sym, xp_var), integrand, modules=["scipy", "numpy"]
+    )
+
+    from scipy.integrate import quad
+
+    U = np.zeros((len(ys), len(xs)), dtype=float)
+    for i, yv in enumerate(ys):
+        for j, xv in enumerate(xs):
+            val, _err = quad(
+                lambda xp_val: g(xv, yv, xp_val),
+                -quad_limit,
+                quad_limit,
+                limit=80,
+            )
+            U[i, j] = val
+    return _wrap_xy(U, xs, ys)
+
+
+def _find_integral(expr: sp.Basic) -> sp.Integral | None:
+    """First `sp.Integral` found anywhere in `expr`, or None."""
+    if isinstance(expr, sp.Integral):
+        return expr
+    for arg in sp.preorder_traversal(expr):
+        if isinstance(arg, sp.Integral):
+            return arg
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Helmholtz on a rectangle (modal expansion at concrete k)
+# ---------------------------------------------------------------------------
+
+
+def sample_helmholtz_rect(
+    expr: sp.Basic,
+    *,
+    x_sym: sp.Symbol,
+    y_sym: sp.Symbol,
+    a_sym: sp.Symbol,
+    b_sym: sp.Symbol,
+    k_sym: sp.Symbol,
+    a_value: float = 1.0,
+    b_value: float = 1.0,
+    k_squared_value: float = 30.0,
+    n_terms: int = 5,
+    n_grid: int = 50,
+) -> dict:
+    """Render the Helmholtz solution on `[0, a] × [0, b]`.
+
+    Two shapes can arrive here:
+
+    - **Eigenfunction**: when the user posed the homogeneous problem
+      (`source_term` empty), the solver emits a single
+      `sin(πx/a) sin(πy/b)` as the "fundamental mode" exemplar.
+      We just lambdify it.
+    - **Inhomogeneous double sum**: nested
+      `Sum(Sum(c_mn φ_mn, n), m)`. We truncate both sums to
+      `n_terms` and substitute `(a, b) → (1, 1)` and `k² → 30`.
+      `k² = 30` lands safely between the first two rectangle
+      eigenvalues (`k²_{11} ≈ 19.74`, `k²_{12} ≈ 49.35`), so no
+      `1 / (k² − k²_{mn})` denominator gets pathologically small.
+    """
+    xs = np.linspace(0.0, a_value, n_grid)
+    ys = np.linspace(0.0, b_value, n_grid)
+    X, Y = np.meshgrid(xs, ys, indexing="xy")
+
+    base_subs = {a_sym: a_value, b_sym: b_value}
+    k_sub = {k_sym**2: k_squared_value, k_sym: float(np.sqrt(k_squared_value))}
+
+    if not isinstance(expr, sp.Sum):
+        # Eigenfunction path.
+        e = expr.subs(base_subs).subs(k_sub)
+        return _wrap_xy(_eval_xy(e, x_sym, y_sym, X, Y), xs, ys)
+
+    # Inhomogeneous path. Two AST shapes can arrive here:
+    #
+    #   (a) Single `Sum(body, (n, 1, oo), (m, 1, oo))` — multi-limit Sum
+    #       (this is what sympy's `c_mn * φ_mn` simplification produces
+    #       for the Helmholtz solver).
+    #   (b) Nested `Sum(Sum(body, (n, ...)), (m, ...))` — also valid
+    #       sympy and semantically equivalent.
+    #
+    # We flatten both into the list of (dummy, lower) pairs and iterate
+    # the Cartesian product.
+    dummies, body = _flatten_sum_limits(expr)
+
+    import itertools
+
+    ranges = [range(lo, lo + n_terms) for _, lo in dummies]
+    syms = [d for d, _ in dummies]
+    total = sp.S.Zero
+    for vals in itertools.product(*ranges):
+        total = total + body.subs(dict(zip(syms, vals)))
+
+    total = total.subs(base_subs).subs(k_sub)
+    if total.has(sp.Integral):
+        total = total.doit()
+    return _wrap_xy(_eval_xy(total, x_sym, y_sym, X, Y), xs, ys)
+
+
+def _flatten_sum_limits(expr: sp.Basic) -> tuple[list[tuple[sp.Symbol, int]], sp.Basic]:
+    """Recursively peel a (possibly nested) Sum into (dummies, body).
+
+    Returns `([(dummy, lower), ...], innermost_body)` for any combination
+    of nested Sums and multi-limit Sums.
+    """
+    if not isinstance(expr, sp.Sum):
+        return [], expr
+    dummies = [(L[0], int(L[1])) for L in expr.limits]
+    inner_dummies, body = _flatten_sum_limits(expr.function)
+    return dummies + inner_dummies, body
+
+
+def _truncate_sum(sum_expr: sp.Sum, n_terms: int) -> sp.Expr:
+    dummy, lower, _ = sum_expr.limits[0]
+    return sum(
+        sum_expr.function.subs(dummy, k)
+        for k in range(int(lower), int(lower) + n_terms)
+    )
+
+
+def _eval_xy(
+    expr: sp.Basic,
+    x_sym: sp.Symbol,
+    y_sym: sp.Symbol,
+    X: np.ndarray,
+    Y: np.ndarray,
+) -> np.ndarray:
+    expr = _normalize_bessel_placeholders(expr)
+    f = sp.lambdify((x_sym, y_sym), expr, modules=["scipy", "numpy"])
+    return np.asarray(f(X, Y), dtype=float)
+
+
+def _wrap_xy(U: np.ndarray, xs: np.ndarray, ys: np.ndarray) -> dict:
+    return {
+        "kind": "surface_xy",
+        "x": xs.tolist(),
+        "y": ys.tolist(),
+        "u": U.tolist(),
+        "x_label": "x",
+        "y_label": "y",
+    }

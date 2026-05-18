@@ -30,6 +30,8 @@ from app.solver.methods.sov_wave_disk import WaveDisk
 from app.solver.numerics import (
     convergence_snapshots,
     sample_2d,
+    sample_halfplane_poisson,
+    sample_helmholtz_rect,
     sample_line,
     sample_meridional_slice,
     sample_polar_disk,
@@ -273,11 +275,38 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
         )
         return plot, None
 
-    # Half-plane (images) and Helmholtz still don't render here. Half-plane
-    # would need numerical convolution of the Poisson kernel with f(x'); a
-    # follow-on can wire it. Helmholtz inhomogeneous solutions can blow up
-    # when k² is near an eigenvalue, so picking a "safe" k for the plot
-    # needs more care than this pass affords.
+    # ---- Half-plane: numerical Poisson convolution ----------------------
+
+    if slug == "images_halfplane":
+        y_sym = sp.Symbol("y", positive=True)
+        # Half-plane has no extra parameters that need numerical defaults
+        # (geometry is the upper half plane; user-supplied `f(x)` may
+        # carry its own constants but those land in `expr.free_symbols`
+        # and the user's parameter map ought to define them — we don't
+        # auto-fill them here).
+        plot = sample_halfplane_poisson(
+            expr,
+            x_sym=x,
+            y_sym=y_sym,
+        )
+        return plot, None
+
+    # ---- Helmholtz on a rectangle ---------------------------------------
+
+    if slug == "helmholtz_rect":
+        y_sym = sp.Symbol("y", real=True)
+        a_sym, b_sym = sp.Symbol("a", positive=True), sp.Symbol("b", positive=True)
+        k_sym = sp.Symbol("k", positive=True)
+        plot = sample_helmholtz_rect(
+            expr,
+            x_sym=x,
+            y_sym=y_sym,
+            a_sym=a_sym,
+            b_sym=b_sym,
+            k_sym=k_sym,
+        )
+        return plot, None
+
     return None, None
 
 
