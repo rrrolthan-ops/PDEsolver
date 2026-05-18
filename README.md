@@ -6,22 +6,26 @@ pizarra, no como una calculadora que devuelve la respuesta final.
 
 ## Estado actual
 
-Este repositorio está en **Fase 1 (hito piloto)**. Lo que funciona hoy:
+Este repositorio está en **Fase 2-A**. Lo que funciona hoy:
 
-- **Ecuación del calor 1D** en una barra `[0, L]` con extremos a temperatura
-  cero (Dirichlet homogéneas) y perfil inicial `f(x)` arbitrario, resuelta
-  por **separación de variables**.
-- Entrada manual por LaTeX.
-- Salida estructurada en pasos (Paso 0–9) con plantillas pedagógicas
-  deterministas en español, observaciones didácticas curadas, verificación
-  simbólica de la solución y convergencia numérica de la serie.
-- Frontend mínimo con editor LaTeX, tarjetas colapsables por paso,
-  slider de nivel de detalle (Básico / Intermedio / Exhaustivo) y gráfico
-  Plotly de `u(x, t)`.
+| EDP | Dominio | Método | Slug |
+|---|---|---|---|
+| Calor `u_t = α² u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `separation_of_variables` |
+| Onda `u_tt = c² u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `sov_wave_1d` |
+| Onda `u_tt = c² u_xx` | `x ∈ ℝ` | Fórmula de D'Alembert | `dalembert_wave_1d` |
+| Laplace `∇²u = 0` | `[0, a] × [0, b]`, Dirichlet | Separación de variables | `sov_laplace_rect` |
 
-Lo que **NO** está en este hito (pero sí en el plan): otras EDPs, otros
-métodos, lenguaje natural, pipeline de visión, exportación a PDF,
-biblioteca de problemas.
+Para cada método la salida es la misma estructura de **10 pasos** (Paso 0–9):
+planteamiento, clasificación, elección de método, desarrollo (incluyendo
+los tres casos de λ cuando aplica), aplicación de BCs/ICs, solución
+final, verificación simbólica, visualización y lectura física.
+
+Lo que **NO** está todavía: Poisson con función de Green, Laplace en
+disco (Bessel), Helmholtz, telégrafo, Schrödinger, biarmónica,
+coordenadas cilíndricas/esféricas (Bessel/Legendre/armónicos esféricos),
+método de imágenes, método de las características en su versión general.
+Llegan en Fase 2-B/C. Tampoco: lenguaje natural (Fase 3), visión
+(Fase 4), exportación PDF y biblioteca (Fase 5).
 
 ## Arquitectura
 
@@ -84,29 +88,83 @@ Abre http://localhost:5173.
 docker compose up --build
 ```
 
-## Cómo probar el caso piloto
+## Cómo probar los métodos
 
-Una vez levantado el backend, prueba la ecuación del calor 1D vía curl:
+### Calor 1D
 
 ```bash
-curl -X POST http://localhost:8000/solve \
-  -H "Content-Type: application/json" \
-  -d '{
-    "equation_latex": "u_t = alpha^2 * u_{xx}",
-    "domain": {"x": [0, "L"], "t": [0, "infty"]},
-    "boundary_conditions": [
-      {"type": "dirichlet", "where": "x=0", "value": "0"},
-      {"type": "dirichlet", "where": "x=L", "value": "0"}
-    ],
-    "initial_conditions": [
-      {"order": 0, "value": "sin(pi*x/L)"}
-    ],
-    "parameters": {"alpha": "positive", "L": "positive"}
-  }'
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "u_t = alpha^2 * u_{xx}",
+  "equation_kind": "heat",
+  "domain": {"x": ["0", "L"], "t": ["0", "infty"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "x=0", "value": "0"},
+    {"type": "dirichlet", "where": "x=L", "value": "0"}
+  ],
+  "initial_conditions": [{"order": 0, "value": "sin(pi*x/L)"}],
+  "parameters": {"alpha": "positive", "L": "positive"}
+}'
 ```
 
-La respuesta es un `SolutionSteps` con ~25 pasos, incluyendo los tres
-casos λ<0, λ=0, λ>0 desarrollados explícitamente.
+### Onda 1D acotada (separación de variables)
+
+Cuerda fija en sus extremos. Necesita **dos** condiciones iniciales
+(posición y velocidad):
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "u_{tt} = c^2 * u_{xx}",
+  "equation_kind": "wave",
+  "domain": {"x": ["0", "L"], "t": ["0", "infty"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "x=0", "value": "0"},
+    {"type": "dirichlet", "where": "x=L", "value": "0"}
+  ],
+  "initial_conditions": [
+    {"order": 0, "value": "sin(pi*x/L)"},
+    {"order": 1, "value": "0"}
+  ],
+  "parameters": {"c": "positive", "L": "positive"}
+}'
+```
+
+### Onda 1D infinita (D'Alembert)
+
+Dominio `x ∈ ℝ`, sin condiciones de contorno:
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "u_{tt} = c^2 * u_{xx}",
+  "equation_kind": "wave",
+  "domain": {"x": ["-infty", "infty"], "t": ["0", "infty"]},
+  "boundary_conditions": [],
+  "initial_conditions": [
+    {"order": 0, "value": "exp(-x^2)"},
+    {"order": 1, "value": "0"}
+  ],
+  "parameters": {"c": "positive"}
+}'
+```
+
+### Laplace en rectángulo
+
+Tres lados a cero, un lado con dato:
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "u_{xx} + u_{yy} = 0",
+  "equation_kind": "laplace",
+  "domain": {"x": ["0", "a"], "y": ["0", "b"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "x=0", "value": "0"},
+    {"type": "dirichlet", "where": "x=a", "value": "0"},
+    {"type": "dirichlet", "where": "y=0", "value": "0"},
+    {"type": "dirichlet", "where": "y=b", "value": "sin(pi*x/a)"}
+  ],
+  "initial_conditions": [{"order": 0, "value": "0"}],
+  "parameters": {"a": "positive", "b": "positive"}
+}'
+```
 
 ## Extensión: añadir un método nuevo
 
@@ -135,8 +193,11 @@ Tijonov–Samarsky ("Equations of Mathematical Physics").
 
 ## Próximos hitos
 
-- **Fase 2**: ecuación de onda, Laplace, Poisson; métodos D'Alembert,
-  Green, Sturm-Liouville en geometrías estándar.
+- **Fase 2-B**: Poisson con función de Green en geometrías estándar,
+  Laplace en disco (Bessel-Fourier), Helmholtz acotado, telégrafo.
+- **Fase 2-C**: Schrödinger libre y con pozo, coordenadas
+  cilíndricas/esféricas (Bessel, Legendre, armónicos esféricos),
+  método de imágenes, biarmónica.
 - **Fase 3**: entrada por lenguaje natural (clasificador LLM, nunca
   resolvedor).
 - **Fase 4**: pipeline de visión (OpenCV + pix2tex + Nougat + Mathpix

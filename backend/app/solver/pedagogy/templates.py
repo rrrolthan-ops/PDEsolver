@@ -306,3 +306,249 @@ def T_physical_interpretation() -> str:
         "puede crecer en ningún punto del interior si no entra calor: "
         "se cumple visualmente en la gráfica."
     )
+
+
+# ===========================================================================
+# WAVE EQUATION (1D bounded) — separation of variables
+# ===========================================================================
+
+def T_statement_wave() -> str:
+    return (
+        "Tenemos la **ecuación de onda 1D** con velocidad de propagación "
+        "$c > 0$. La incógnita $u(x, t)$ representa, por ejemplo, el "
+        "desplazamiento transversal de una cuerda elástica fija en sus "
+        "dos extremos. A diferencia del calor, **el tiempo entra al "
+        "cuadrado** ($u_{tt}$): la EDP es invariante por inversión "
+        "temporal y no disipa — las soluciones oscilan indefinidamente.\n\n"
+        "Necesitamos **dos** condiciones iniciales: el perfil $u(x, 0)$ "
+        "y la velocidad inicial $u_t(x, 0)$. Esto es estructural: el "
+        "operador temporal es de segundo orden, así que su problema "
+        "de Cauchy en $t = 0$ requiere posición y velocidad, "
+        "igual que en mecánica clásica."
+    )
+
+
+def T_wave_temporal_ode() -> str:
+    return (
+        "La ecuación temporal $T_n'' + c^2 \\lambda_n\\, T_n = 0$ es una "
+        "**EDO de segundo orden con coeficiente constante positivo**: su "
+        "solución general es una combinación de seno y coseno. "
+        "Comparemos con el caso del calor:\n\n"
+        "- **Calor:** $T_n' + \\alpha^2 \\lambda_n T_n = 0$ → "
+        "$T_n = e^{-\\alpha^2 \\lambda_n t}$ (decaimiento).\n"
+        "- **Onda:** $T_n'' + c^2 \\lambda_n T_n = 0$ → "
+        "$T_n = A_n \\cos(c \\mu_n t) + B_n \\sin(c \\mu_n t)$ "
+        "(oscilación), donde $\\mu_n = \\sqrt{\\lambda_n} = n\\pi/L$.\n\n"
+        "Cada modo $n$ tiene una **frecuencia angular** $\\omega_n = c\\mu_n "
+        "= c n\\pi/L$. Las frecuencias forman una sucesión armónica "
+        "(múltiplos enteros de $c\\pi/L$): por eso una cuerda suena "
+        "musicalmente afinada."
+    )
+
+
+def T_wave_two_ics() -> str:
+    return (
+        "Para fijar **dos** familias de coeficientes ($A_n$ y $B_n$) "
+        "necesitamos **dos** condiciones iniciales. Sustituyendo en "
+        "$t = 0$:\n\n"
+        "- De $u(x, 0) = f(x)$ obtenemos los $A_n$ (la parte coseno "
+        "del modo temporal vale 1 en $t = 0$).\n"
+        "- De $u_t(x, 0) = g(x)$ obtenemos los $B_n$: al derivar la "
+        "serie y evaluar en $t = 0$, la parte coseno se anula y queda "
+        "el seno multiplicado por $c\\mu_n$.\n\n"
+        "Ambas familias son coeficientes de Fourier en seno, con sus "
+        "fórmulas integrales de siempre, salvo que la de $B_n$ trae un "
+        "factor $1/(c\\mu_n)$ de la derivación."
+    )
+
+
+def T_wave_physical_interpretation() -> str:
+    return (
+        "La cuerda vibra como **superposición de modos normales** "
+        "$\\sin(n\\pi x/L)$ cada uno con su propia frecuencia "
+        "$\\omega_n = c n\\pi/L$. La energía no se disipa: el "
+        "sistema es conservativo. Observaciones físicas:\n\n"
+        "- Los modos forman una **serie armónica** (frecuencias en "
+        "razón 1, 2, 3, …): si arrancamos un piano, escuchamos la "
+        "fundamental más sus armónicos superiores.\n"
+        "- La forma de la onda es **2L-periódica en el tiempo**: "
+        "todos los $\\omega_n$ son múltiplos enteros de $\\omega_1$.\n"
+        "- La **fórmula de D'Alembert** (otro método en este repo) "
+        "muestra que la misma solución se puede ver como dos pulsos "
+        "viajando: $u(x,t) = \\Phi(x - ct) + \\Psi(x + ct)$. Ambas "
+        "visiones son equivalentes."
+    )
+
+
+# ===========================================================================
+# D'ALEMBERT — wave 1D on the infinite line
+# ===========================================================================
+
+def T_dalembert_statement() -> str:
+    return (
+        "Resolvemos la **ecuación de onda 1D sin fronteras**: la cuerda "
+        "es infinitamente larga ($x \\in \\mathbb{R}$), o bien estudiamos "
+        "un intervalo de tiempo lo bastante corto como para que las "
+        "fronteras todavía no influyan. Dadas las condiciones iniciales "
+        "$u(x, 0) = f(x)$ y $u_t(x, 0) = g(x)$, buscamos $u(x, t)$ para "
+        "$t > 0$."
+    )
+
+
+def T_dalembert_method_motivation() -> str:
+    return (
+        "Vamos a **factorizar el operador de onda**. Notamos que\n\n"
+        "$$\\partial_t^2 - c^2 \\partial_x^2 = "
+        "(\\partial_t - c\\partial_x)(\\partial_t + c\\partial_x).$$\n\n"
+        "Cada factor anula a funciones de la forma $\\Phi(x \\pm ct)$. "
+        "Esto sugiere el **cambio de variables características** "
+        "$\\xi = x - ct$, $\\eta = x + ct$, en el que la EDP se "
+        "convierte en $u_{\\xi\\eta} = 0$, integrable trivialmente."
+    )
+
+
+def T_dalembert_change_of_variables() -> str:
+    return (
+        "Definamos $\\xi = x - ct$ y $\\eta = x + ct$. Por la regla de la "
+        "cadena:\n\n"
+        "- $u_x = u_\\xi + u_\\eta$,\n"
+        "- $u_t = -c\\, u_\\xi + c\\, u_\\eta$.\n\n"
+        "Iterando para las segundas derivadas (cuidado con los productos "
+        "cruzados, este es el paso donde más se equivoca uno):\n\n"
+        "- $u_{xx} = u_{\\xi\\xi} + 2 u_{\\xi\\eta} + u_{\\eta\\eta}$,\n"
+        "- $u_{tt} = c^2 u_{\\xi\\xi} - 2 c^2 u_{\\xi\\eta} + c^2 u_{\\eta\\eta}$.\n\n"
+        "Sustituyendo en $u_{tt} - c^2 u_{xx} = 0$ casi todo se cancela y "
+        "queda $-4 c^2 u_{\\xi\\eta} = 0$, es decir $u_{\\xi\\eta} = 0$."
+    )
+
+
+def T_dalembert_general_solution() -> str:
+    return (
+        "Integrando $u_{\\xi\\eta} = 0$ primero respecto a $\\eta$ "
+        "(la \"constante\" depende de $\\xi$) y luego en $\\xi$:\n\n"
+        "$$u(\\xi, \\eta) = \\Phi(\\xi) + \\Psi(\\eta),$$\n\n"
+        "donde $\\Phi$ y $\\Psi$ son funciones arbitrarias (de "
+        "clase $C^2$). Deshaciendo el cambio:\n\n"
+        "$$u(x, t) = \\Phi(x - ct) + \\Psi(x + ct).$$\n\n"
+        "**Interpretación inmediata:** la solución es la superposición de "
+        "dos ondas que viajan sin deformarse, una hacia la derecha con "
+        "velocidad $+c$ y otra hacia la izquierda con velocidad $-c$."
+    )
+
+
+def T_dalembert_apply_ics() -> str:
+    return (
+        "Ahora ajustamos $\\Phi$ y $\\Psi$ a las condiciones iniciales.\n\n"
+        "**Posición en $t=0$:** $\\Phi(x) + \\Psi(x) = f(x)$.\n\n"
+        "**Velocidad en $t=0$:** derivando, "
+        "$-c\\Phi'(x) + c\\Psi'(x) = g(x)$, es decir "
+        "$\\Psi'(x) - \\Phi'(x) = g(x)/c$.\n\n"
+        "Integrando la segunda de $0$ a $x$:\n\n"
+        "$$\\Psi(x) - \\Phi(x) = "
+        "\\frac{1}{c}\\int_0^x g(s)\\, ds + K,$$\n\n"
+        "con $K$ una constante de integración. Junto con la primera "
+        "ecuación tenemos un sistema lineal en $\\Phi(x)$ y $\\Psi(x)$ "
+        "que se resuelve sumando y restando."
+    )
+
+
+def T_dalembert_formula() -> str:
+    return (
+        "Sumando y restando las dos ecuaciones, despejamos:\n\n"
+        "$$\\Phi(x) = \\frac{f(x)}{2} - \\frac{1}{2c}\\int_0^x g(s)\\, ds - \\frac{K}{2},$$\n\n"
+        "$$\\Psi(x) = \\frac{f(x)}{2} + \\frac{1}{2c}\\int_0^x g(s)\\, ds + \\frac{K}{2}.$$\n\n"
+        "Las constantes $K$ se cancelan al formar $u = \\Phi(x-ct) + \\Psi(x+ct)$. "
+        "Sustituyendo y agrupando se obtiene la célebre **fórmula de D'Alembert**:"
+    )
+
+
+def T_dalembert_final_box() -> str:
+    return (
+        "$$\\boxed{\\; u(x, t) = \\frac{f(x - ct) + f(x + ct)}{2} + "
+        "\\frac{1}{2c}\\int_{x-ct}^{x+ct} g(s)\\, ds. \\;}$$"
+    )
+
+
+def T_dalembert_physical_interpretation() -> str:
+    return (
+        "Tres lecturas físicas se extraen directamente de la fórmula:\n\n"
+        "- **Dominio de dependencia.** $u(x, t)$ sólo depende de los "
+        "valores iniciales en el intervalo $[x - ct, x + ct]$. Lo que "
+        "ocurra fuera no afecta a $(x, t)$. La información viaja a "
+        "velocidad **finita** $c$.\n"
+        "- **Dos pulsos viajeros.** El perfil inicial $f$ se reparte por "
+        "mitades en dos copias que se separan: una a velocidad $+c$, "
+        "otra a $-c$. Es el famoso \"truco del pulso partido en dos\".\n"
+        "- **Velocidad inicial → desplazamiento medio.** La integral de "
+        "$g$ en el intervalo dependiente añade un \"empuje acumulado\" "
+        "proporcional al impulso recibido entre los dos rayos "
+        "característicos."
+    )
+
+
+# ===========================================================================
+# LAPLACE on a rectangle — separation of variables
+# ===========================================================================
+
+def T_statement_laplace_rect() -> str:
+    return (
+        "Resolvemos la **ecuación de Laplace** $\\Delta u = u_{xx} + u_{yy} = 0$ "
+        "en el rectángulo $[0, a] \\times [0, b]$. La EDP es elíptica "
+        "y describe estados de equilibrio: por ejemplo, la **temperatura "
+        "estacionaria** de una placa rectangular cuando ya no varía con "
+        "el tiempo, o un potencial electrostático en un dominio sin "
+        "cargas internas.\n\n"
+        "El problema clásico fija el valor de $u$ en cada lado (Dirichlet). "
+        "Tomamos el caso simétrico más sencillo:\n\n"
+        "- $u(x, 0) = 0$,\n"
+        "- $u(x, b) = f(x)$,\n"
+        "- $u(0, y) = u(a, y) = 0$.\n\n"
+        "Es decir, una placa caliente sólo por arriba y refrigerada por "
+        "los otros tres lados."
+    )
+
+
+def T_laplace_signs() -> str:
+    return (
+        "**Atención al signo de la constante de separación.** En el "
+        "calor escribíamos $-\\lambda$ para que las autofunciones "
+        "espaciales fueran trigonométricas. Aquí, separando "
+        "$u(x, y) = X(x) Y(y)$ y dividiendo, obtenemos\n\n"
+        "$$\\frac{X''(x)}{X(x)} = -\\frac{Y''(y)}{Y(y)} = -\\lambda.$$\n\n"
+        "Esto da $X'' + \\lambda X = 0$ (oscilatoria, como antes) y "
+        "$Y'' - \\lambda Y = 0$ (**hiperbólica**: combinaciones de "
+        "exponenciales o, equivalentemente, $\\sinh$ y $\\cosh$). "
+        "La asimetría es clave: una dirección oscila, la otra crece o "
+        "decrece exponencialmente."
+    )
+
+
+def T_laplace_Y_ode() -> str:
+    return (
+        "La EDO en $y$ es $Y'' - \\lambda_n Y = 0$ con "
+        "$\\lambda_n = (n\\pi/a)^2 > 0$. Su solución general se "
+        "escribe convenientemente con senos y cosenos hiperbólicos "
+        "(equivalente a $A e^{\\mu y} + B e^{-\\mu y}$):\n\n"
+        "$$Y_n(y) = C_n \\sinh\\!\\left(\\tfrac{n\\pi y}{a}\\right) "
+        "+ D_n \\cosh\\!\\left(\\tfrac{n\\pi y}{a}\\right).$$\n\n"
+        "La condición $u(x, 0) = 0$ se traduce en $Y_n(0) = 0$, "
+        "esto es $D_n = 0$. Sobreviven sólo las $\\sinh$."
+    )
+
+
+def T_laplace_physical_interpretation() -> str:
+    return (
+        "La solución de Laplace en el rectángulo es la **distribución "
+        "estacionaria** de temperatura (o potencial). Observaciones:\n\n"
+        "- **Principio del máximo.** El máximo y el mínimo de $u$ se "
+        "alcanzan **en la frontera**. En el interior, $u$ es "
+        "armónica y nunca presenta extremos locales estrictos.\n"
+        "- **Suavizado.** Los modos altos $n$ crecen como "
+        "$\\sinh(n\\pi y/a)$ y por tanto requieren coeficientes "
+        "pequeños para no explotar. La solución hereda el contenido "
+        "espectral de $f$ pero se suaviza al alejarse de la frontera "
+        "caliente.\n"
+        "- **Unicidad.** Las soluciones de Dirichlet en dominios "
+        "acotados son únicas (corolario del principio del máximo): "
+        "lo que obtenemos es la única respuesta posible."
+    )
