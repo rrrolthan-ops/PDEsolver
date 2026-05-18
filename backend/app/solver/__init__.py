@@ -1,16 +1,28 @@
 """Symbolic PDE solver — the pedagogical core of the app.
 
-The public surface is intentionally small:
+We deliberately keep this `__init__` minimal: importing the solver
+package must NOT eagerly drag the whole pipeline + methods chain in,
+because the parser (which the methods themselves use) imports symbols
+from `solver.core.symbols`, and a circular import would block startup.
 
-- `solve(problem)`: top-level entry that picks a method and runs it.
-- `Step`, `SolutionResponse`: the structured pedagogical output.
-
-Everything else (method classes, pedagogy templates, verification)
-is internal to this package.
+Use `from app.solver.pipeline import solve` for the public entry point.
+The `solve` symbol is also re-exported here lazily for convenience.
 """
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from app.schemas import PDEProblem, SolutionResponse, Step
 
-from .pipeline import solve
+if TYPE_CHECKING:
+    from .pipeline import solve  # noqa: F401  (typing only)
+
+
+def solve(problem: "PDEProblem") -> "SolutionResponse":  # type: ignore[no-redef]
+    """Lazy facade over `app.solver.pipeline.solve` to avoid circular imports."""
+    from .pipeline import solve as _solve  # local import breaks the cycle
+    return _solve(problem)
+
 
 __all__ = ["PDEProblem", "SolutionResponse", "Step", "solve"]
