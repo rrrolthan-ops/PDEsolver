@@ -372,6 +372,77 @@ _REGISTRY: dict[str, DidacticObservation] = {
             "conforme (2D) o métodos numéricos."
         ),
     ),
+    # ---- Bessel / disk ---------------------------------------------------
+    "bessel_weighted_orthogonality": DidacticObservation(
+        kind="pitfall",
+        text_md=(
+            "**Las autofunciones de Bessel son ortogonales con peso "
+            "$r$, no con peso $1$.** Esto es estructural: el "
+            "Laplaciano en polares se escribe como "
+            "$\\Delta u = \\tfrac{1}{r}(r u_r)_r + \\dots$, y esa "
+            "$r$ extra es exactamente el peso $r\\, dr$ de la integral "
+            "de área. Si lo olvidas y proyectas con la integral plana, "
+            "los coeficientes te salen mal."
+        ),
+    ),
+    "bessel_inharmonic_drum": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Por qué un tambor no suena a nota.** Los ceros de $J_0$ "
+            "están en proporciones irracionales no enteras "
+            "($\\mu_2/\\mu_1 \\approx 2.295$, $\\mu_3/\\mu_1 \\approx 3.598$, …). "
+            "Sus frecuencias asociadas $\\omega_n = c\\mu_n/R$ son "
+            "**inarmónicas**: el oído no las percibe como una nota "
+            "musical limpia, sino como un sonido de percusión."
+        ),
+    ),
+    "bessel_regularity_at_origin": DidacticObservation(
+        kind="pitfall",
+        text_md=(
+            "**$Y_0$ se descarta por regularidad.** Las dos soluciones "
+            "de Bessel de orden 0, $J_0$ y $Y_0$, son linealmente "
+            "independientes. $Y_0(s)$ diverge como $\\tfrac{2}{\\pi}\\ln s$ "
+            "cuando $s \\to 0^+$. En un disco **sólido** la solución debe "
+            "ser finita en $r = 0$, así que $Y_0$ queda excluida. En un "
+            "**anillo** (con un agujero central) mantendríamos las dos."
+        ),
+    ),
+    # ---- Legendre / sphere -----------------------------------------------
+    "legendre_pole_regularity": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**Los autovalores $\\ell$ vienen forzados por la "
+            "regularidad en los polos.** La EDO de Legendre tiene "
+            "soluciones para cualquier valor de $\\ell$, pero sólo "
+            "cuando $\\ell$ es un **entero no negativo** la solución "
+            "es polinómica y por tanto **regular** en $\\xi = \\pm 1$ "
+            "(los polos norte y sur). Esto explica por qué "
+            "$\\ell = 0, 1, 2, \\dots$ y no algún continuo."
+        ),
+    ),
+    "legendre_multipole_meaning": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Los términos $r^\\ell P_\\ell$ son los multipolos.** "
+            "$\\ell = 0$ — monopolo (carga total promediada en la "
+            "esfera). $\\ell = 1$ — dipolo (variación de orden $\\cos\\theta$). "
+            "$\\ell = 2$ — cuadrupolo. Esta serie es la **expansión "
+            "multipolar** que se usa en electrostática y gravitación "
+            "para describir el campo lejano de una distribución de "
+            "fuentes."
+        ),
+    ),
+    "ball_mean_value_3d": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**Teorema del valor medio en 3D.** Si $u$ es armónica en "
+            "una bola alrededor de $\\mathbf{x}_0$, entonces "
+            "$u(\\mathbf{x}_0) = \\tfrac{1}{4\\pi R^2} \\oint_{|x - x_0| = R} "
+            "u\\, dS$. En nuestra expansión, esto se manifiesta como "
+            "$u(0) = A_0$, el coeficiente del monopolo: el promedio "
+            "esférico del dato $f$."
+        ),
+    ),
 }
 
 

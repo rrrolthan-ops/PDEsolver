@@ -217,6 +217,37 @@ def _looks_like_biharmonic_beam(p: PDEProblem) -> bool:
     return has_4thder and _has_1d_interval_domain(p)
 
 
+def _looks_like_wave_disk(p: PDEProblem) -> bool:
+    """Wave on a disk: geometry hint == disk, equation_kind == wave."""
+    if p.geometry != "disk":
+        return False
+    if p.equation_kind == "wave":
+        return True
+    latex = p.equation_latex.replace(" ", "").lower()
+    return "u_{tt}" in latex or "u_tt" in latex
+
+
+def _looks_like_heat_disk(p: PDEProblem) -> bool:
+    """Heat on a disk: geometry hint == disk, equation_kind == heat."""
+    if p.geometry != "disk":
+        return False
+    if p.equation_kind == "heat":
+        return True
+    latex = p.equation_latex.replace(" ", "").lower()
+    # u_t with alpha², not u_tt
+    return ("u_t=" in latex or "u_t-" in latex) and "u_{tt}" not in latex
+
+
+def _looks_like_laplace_ball(p: PDEProblem) -> bool:
+    """Laplace in a 3D ball: geometry hint == sphere."""
+    if p.geometry != "sphere":
+        return False
+    if p.equation_kind == "laplace":
+        return True
+    latex = p.equation_latex.replace(" ", "").lower()
+    return "nabla^2u" in latex or "\\nabla^2u" in latex or "\\delta" in latex
+
+
 def _looks_like_images_halfplane(p: PDEProblem) -> bool:
     """Laplace on a half-plane: geometry hint or domain shape gives it away."""
     if p.geometry == "halfplane":
@@ -458,6 +489,66 @@ def _choice_biharmonic_beam(_p: PDEProblem | None = None) -> MethodChoice:
     )
 
 
+def _choice_wave_disk(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="sov_wave_disk",
+        rationale_md=(
+            "La geometría es **circular** y la EDP es de onda con "
+            "condición de Dirichlet en el borde. Separación de "
+            "variables en polares produce la **ecuación de Bessel** "
+            "en la coordenada radial y autovalores $\\lambda_n = "
+            "(\\mu_n/R)^2$, donde $\\mu_n$ es el $n$-ésimo cero "
+            "positivo de $J_0$. Es la generalización natural de la "
+            "cuerda vibrante 1D a 2D con geometría circular."
+        ),
+        alternatives_md=(
+            "La **transformada de Hankel** (análoga radial de Fourier) "
+            "es la herramienta cuando el dominio es no acotado "
+            "($r \\in [0, \\infty)$). Aquí, dominio acotado: SOV "
+            "Bessel-Fourier es la opción canónica."
+        ),
+    )
+
+
+def _choice_heat_disk(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="sov_heat_disk",
+        rationale_md=(
+            "Igual que el caso de la onda en disco, pero con un "
+            "operador temporal de **primer orden**. Cada modo Bessel "
+            "decae exponencialmente como $e^{-\\alpha^2 (\\mu_n/R)^2 t}$, "
+            "con el modo fundamental $J_0(\\mu_1 r/R)$ dominando a "
+            "tiempos largos."
+        ),
+        alternatives_md=(
+            "**Función de Green** del calor en disco también funciona, "
+            "pero la fórmula explícita ya involucra series de Bessel — "
+            "no se gana simplicidad."
+        ),
+    )
+
+
+def _choice_laplace_ball(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="sov_laplace_ball",
+        rationale_md=(
+            "Geometría **esférica** y EDP de Laplace. Separación de "
+            "variables en esféricas con simetría axial produce **EDOs "
+            "de Legendre y Euler**. Los autovalores son enteros "
+            "$\\ell = 0, 1, 2, \\dots$ forzados por la regularidad en "
+            "los polos, y las autofunciones angulares son los "
+            "**polinomios de Legendre** $P_\\ell(\\cos\\theta)$."
+        ),
+        alternatives_md=(
+            "**Función de Green del Laplaciano en bola** (fórmula de "
+            "Poisson esférica) daría la misma solución como una "
+            "integral. La serie multipolar es más útil para entender "
+            "el **comportamiento por orden** del campo (monopolo, "
+            "dipolo, cuadrupolo, …)."
+        ),
+    )
+
+
 def _choice_images_halfplane(_p: PDEProblem | None = None) -> MethodChoice:
     return MethodChoice(
         method_slug="images_halfplane",
@@ -488,6 +579,10 @@ _REGISTRY: list[tuple[Callable[[PDEProblem], bool], Callable[[PDEProblem | None]
     (_looks_like_characteristics_transport, _choice_characteristics),
     (_looks_like_poisson_1d, _choice_greens_1d),
     (_looks_like_telegraph, _choice_telegraph),
+    # Geometry-specific (must precede the more general Heat/Wave 1D predicates).
+    (_looks_like_wave_disk, _choice_wave_disk),
+    (_looks_like_heat_disk, _choice_heat_disk),
+    (_looks_like_laplace_ball, _choice_laplace_ball),
     (_looks_like_heat_1d, _choice_heat_1d_sov),
     (_looks_like_wave_1d_unbounded, _choice_dalembert),
     (_looks_like_wave_1d_bounded, _choice_wave_1d_sov),
@@ -505,11 +600,11 @@ def pick_method(problem: PDEProblem) -> MethodChoice:
             return builder(problem)
     raise NotImplementedError(
         "Ningún método del repertorio actual cubre este problema. "
-        "Repertorio implementado (Fase 1 + 2-A + 2-B + 2-C): calor 1D, "
-        "onda 1D (SOV y D'Alembert), Laplace en rectángulo, disco y "
-        "semiplano (imágenes), Poisson 1D (Green), Helmholtz en "
-        "rectángulo, telégrafo, Schrödinger en pozo infinito, transporte "
-        "1D por características, biarmónica/viga 1D."
+        "Repertorio (Fase 1 + 2-A + 2-B + 2-C + 2-D): calor 1D y en disco, "
+        "onda 1D (SOV y D'Alembert) y en disco (tambor), Laplace en "
+        "rectángulo, disco, bola y semiplano, Poisson 1D (Green), "
+        "Helmholtz en rectángulo, telégrafo, Schrödinger en pozo infinito, "
+        "transporte 1D por características, biarmónica/viga 1D."
     )
 
 

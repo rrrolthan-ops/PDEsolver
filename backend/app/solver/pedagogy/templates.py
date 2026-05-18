@@ -1241,3 +1241,263 @@ def T_images_physical_interpretation() -> str:
         "tira semi-infinita (imágenes periódicas), o disco (con la "
         "transformación de inversión $r \\mapsto R^2/r$)."
     )
+
+
+# ===========================================================================
+# WAVE / HEAT on a disk — Bessel-Fourier
+# ===========================================================================
+
+def T_statement_wave_disk() -> str:
+    return (
+        "Resolvemos la **ecuación de onda en un disco** (membrana "
+        "elástica circular, p. ej. un tambor) de radio $R$, fija en su "
+        "borde:\n\n"
+        "$$u_{tt} = c^2\\, \\Delta u, \\quad r < R,\\ t > 0, \\qquad "
+        "u(R, t) = 0.$$\n\n"
+        "Para mantener la pedagogía limpia consideramos el caso "
+        "**axialmente simétrico** (la membrana se golpea con un perfil "
+        "que sólo depende de $r$, no de $\\theta$). El Laplaciano "
+        "radial en polares es entonces $\\Delta u = u_{rr} + u_r/r$. "
+        "Necesitamos dos condiciones iniciales: posición y velocidad."
+    )
+
+
+def T_statement_heat_disk() -> str:
+    return (
+        "Resolvemos la **ecuación del calor en un disco** circular de "
+        "radio $R$ con frontera a temperatura cero, en el caso "
+        "**axialmente simétrico** (datos iniciales que sólo dependen "
+        "del radio):\n\n"
+        "$$u_t = \\alpha^2 \\bigl(u_{rr} + u_r/r\\bigr), \\quad r < R,\\ "
+        "t > 0,\\qquad u(R, t) = 0,\\quad u(r, 0) = f(r).$$\n\n"
+        "El Laplaciano radial en polares incluye el término "
+        "$u_r/r$ — la curvatura geométrica del sistema de coordenadas. "
+        "Esa es la única diferencia con el problema del calor 1D, "
+        "pero basta para hacer que la solución natural se exprese en "
+        "**funciones de Bessel** en vez de senos."
+    )
+
+
+def T_bessel_method_choice() -> str:
+    return (
+        "**Separación de variables en polares.** Probamos "
+        "$u(r, t) = R(r)\\, T(t)$. Sustituyendo en la EDP y dividiendo "
+        "por $\\alpha^2 R T$ (heat) o $c^2 R T$ (onda), las dos "
+        "dependencias se separan. Como antes, llamamos $-\\lambda$ a "
+        "la constante de separación:"
+    )
+
+
+def T_bessel_radial_ode() -> str:
+    return (
+        "La EDO radial es:\n\n"
+        "$$R'' + \\frac{R'}{r} + \\lambda R = 0.$$\n\n"
+        "Multiplicando por $r^2$ y haciendo el cambio $s = \\sqrt{\\lambda}\\, r$ "
+        "(asumiendo $\\lambda > 0$, que justificaremos pronto), la "
+        "EDO se convierte en la **ecuación de Bessel de orden cero**:\n\n"
+        "$$s^2 \\tilde R''(s) + s \\tilde R'(s) + s^2 \\tilde R(s) = 0,$$\n\n"
+        "cuyas dos soluciones independientes son las **funciones de "
+        "Bessel** $J_0(s)$ (regular en el origen) y $Y_0(s)$ "
+        "(logarítmicamente divergente en $s = 0$). En un disco sólido "
+        "**descartamos $Y_0$** por la condición de regularidad en "
+        "$r = 0$. Queda $R(r) = J_0(\\sqrt{\\lambda}\\, r)$ salvo "
+        "escala."
+    )
+
+
+def T_bessel_eigenvalues() -> str:
+    return (
+        "Aplicamos la BC $R(R) = 0$, es decir $J_0(\\sqrt{\\lambda}\\, R) = 0$. "
+        "Esto fuerza a que $\\sqrt{\\lambda}\\, R$ sea **un cero "
+        "positivo de $J_0$**. Los ceros de $J_0$ forman una sucesión "
+        "creciente $\\mu_1 < \\mu_2 < \\mu_3 < \\dots \\to \\infty$ "
+        "(numéricamente $\\mu_1 \\approx 2.405$, $\\mu_2 \\approx 5.520$, …) "
+        "y producen los autovalores y las autofunciones:\n\n"
+        "$$\\lambda_n = \\left(\\tfrac{\\mu_n}{R}\\right)^2, \\qquad "
+        "R_n(r) = J_0\\!\\bigl(\\tfrac{\\mu_n r}{R}\\bigr), "
+        "\\quad n = 1, 2, 3, \\dots$$\n\n"
+        "Las $R_n$ son **ortogonales con peso $r$** sobre $[0, R]$ "
+        "(no con peso $1$, ¡atención!): "
+        "$\\int_0^R r\\, J_0(\\mu_m r/R)\\, J_0(\\mu_n r/R)\\, dr = "
+        "\\tfrac{R^2}{2} [J_1(\\mu_n)]^2\\, \\delta_{nm}$. El peso $r$ "
+        "viene del **elemento de área** $dA = r\\, dr\\, d\\theta$."
+    )
+
+
+def T_bessel_temporal_wave() -> str:
+    return (
+        "La EDO temporal $T_n'' + c^2 \\lambda_n T_n = 0$ es la del "
+        "oscilador armónico simple, con frecuencia "
+        "$\\omega_n = c \\sqrt{\\lambda_n} = c \\mu_n / R$:\n\n"
+        "$$T_n(t) = A_n \\cos(\\omega_n t) + B_n \\sin(\\omega_n t).$$\n\n"
+        "**Aquí está la diferencia clave con la cuerda 1D:** los "
+        "modos del tambor tienen frecuencias $\\omega_n \\propto \\mu_n$, "
+        "y los ceros de $J_0$ **no están en proporción entera entre sí** "
+        "($\\mu_2/\\mu_1 \\approx 2.295$, no 2). Por eso un tambor no "
+        "produce notas musicales claras como una cuerda: sus armónicos "
+        "son **inarmónicos**."
+    )
+
+
+def T_bessel_temporal_heat() -> str:
+    return (
+        "La EDO temporal $T_n' + \\alpha^2 \\lambda_n T_n = 0$ es de "
+        "primer orden, con decaimiento exponencial:\n\n"
+        "$$T_n(t) = C_n\\, e^{-\\alpha^2 \\lambda_n t} = "
+        "C_n\\, e^{-\\alpha^2 (\\mu_n / R)^2 t}.$$\n\n"
+        "El primer modo $J_0(\\mu_1 r/R)$ tiene la constante de tiempo "
+        "más larga ($\\tau_1 = R^2 / (\\alpha^2 \\mu_1^2)$); los modos "
+        "altos decaen rápidamente porque $\\mu_n^2$ crece "
+        "**cuadráticamente** con $n$ (a diferencia de la cuerda, donde "
+        "crecía como $n^2 \\pi^2$, pero la idea es la misma)."
+    )
+
+
+def T_bessel_coefficients() -> str:
+    return (
+        "Para extraer los coeficientes de la expansión, "
+        "$f(r) = \\sum_n B_n J_0(\\mu_n r/R)$ (o, para la onda, las "
+        "fórmulas análogas con $A_n$ y $B_n$), usamos la ortogonalidad "
+        "**con peso $r$**:\n\n"
+        "$$B_n = \\frac{2}{R^2\\, [J_1(\\mu_n)]^2} \\int_0^R r\\, f(r)\\, "
+        "J_0\\!\\bigl(\\tfrac{\\mu_n r}{R}\\bigr)\\, dr.$$\n\n"
+        "El factor $[J_1(\\mu_n)]^2$ viene de la **fórmula de Lommel** "
+        "que da la norma de las autofunciones radiales."
+    )
+
+
+def T_bessel_physical_interpretation_wave() -> str:
+    return (
+        "Lecturas físicas del tambor circular:\n\n"
+        "- **Frecuencias inarmónicas.** $\\omega_n / \\omega_1 = "
+        "\\mu_n / \\mu_1$ son números **irracionales no enteros**: "
+        "$\\mu_2/\\mu_1 \\approx 2.295$, $\\mu_3/\\mu_1 \\approx 3.598$, …. "
+        "Por eso un tambor suena \"a percusión\", no a nota. La cuerda, "
+        "en cambio, tiene $\\omega_n/\\omega_1 = n$ exacto.\n"
+        "- **Modos angulares.** Si admitimos perfiles iniciales no "
+        "axisimétricos, aparecen modos con $J_m(\\mu_{m,n} r/R)$ y "
+        "factor $\\cos(m\\theta)$ o $\\sin(m\\theta)$. Sus "
+        "**líneas nodales** son círculos concéntricos y diámetros "
+        "respectivamente — los famosos patrones de Chladni circulares.\n"
+        "- **Velocidad efectiva.** En el modo $n$, los nodos se "
+        "mueven a velocidad de fase $c$; el modo no \"viaja\" "
+        "(la onda es estacionaria), pero la frecuencia revela $c$."
+    )
+
+
+def T_bessel_physical_interpretation_heat() -> str:
+    return (
+        "Lecturas físicas:\n\n"
+        "- **Decaimiento del modo fundamental.** El modo $J_0(\\mu_1 r/R)$ "
+        "domina a tiempos largos: $\\mu_1 \\approx 2.405$, "
+        "$\\lambda_1 = (\\mu_1/R)^2 \\approx 5.78/R^2$. Es la **temperatura "
+        "característica** del disco con extremos a cero.\n"
+        "- **Comparación con el calor 1D.** En 1D, $\\lambda_1 = \\pi^2/L^2 "
+        "\\approx 9.87/L^2$. El disco se enfría algo más lento que una "
+        "barra del mismo \"radio\" porque la geometría circular "
+        "atrapa el calor en el centro un poco más.\n"
+        "- **Validez del ansatz axisimétrico.** Sólo si los datos "
+        "iniciales son axisimétricos. Para datos generales se "
+        "necesitan los modos con $m \\geq 1$."
+    )
+
+
+# ===========================================================================
+# LAPLACE in a 3D ball — axisymmetric Dirichlet, Legendre expansion
+# ===========================================================================
+
+def T_statement_laplace_ball() -> str:
+    return (
+        "Resolvemos la **ecuación de Laplace en una bola** de radio "
+        "$R$, con dato Dirichlet en la esfera que depende sólo de la "
+        "**colatitud** $\\theta$ (no del ángulo azimutal $\\phi$):\n\n"
+        "$$\\Delta u = 0, \\quad r < R, \\qquad u(R, \\theta) = f(\\theta).$$\n\n"
+        "El caso **axisimétrico** (sin dependencia de $\\phi$) lo "
+        "elegimos por claridad pedagógica: la expansión natural usa "
+        "**polinomios de Legendre** $P_\\ell(\\cos\\theta)$ en lugar de "
+        "los armónicos esféricos completos $Y_\\ell^m(\\theta, \\phi)$. "
+        "El caso general es una generalización directa que mencionamos "
+        "al final."
+    )
+
+
+def T_laplace_ball_method_choice() -> str:
+    return (
+        "Separamos $u(r, \\theta) = R(r)\\, \\Theta(\\theta)$. El "
+        "Laplaciano en esféricas (sin $\\phi$) es:\n\n"
+        "$$\\Delta u = \\frac{1}{r^2}(r^2 u_r)_r "
+        "+ \\frac{1}{r^2 \\sin\\theta}(\\sin\\theta\\, u_\\theta)_\\theta.$$\n\n"
+        "Sustituyendo y multiplicando por $r^2/(R\\Theta)$, separamos "
+        "en una EDO radial y una angular, con constante $\\ell(\\ell + 1)$ "
+        "(la elección de esta forma se justificará en el paso "
+        "angular: es la única que da soluciones polinómicas regulares)."
+    )
+
+
+def T_laplace_ball_angular() -> str:
+    return (
+        "La EDO angular, con el cambio $\\xi = \\cos\\theta$ "
+        "(transforma $\\sin\\theta\\, d\\theta$ en $-d\\xi$), se convierte "
+        "en la **ecuación de Legendre**:\n\n"
+        "$$\\bigl[(1 - \\xi^2)\\, \\Theta'(\\xi)\\bigr]' + \\ell(\\ell + 1)\\, "
+        "\\Theta(\\xi) = 0.$$\n\n"
+        "Para que $\\Theta$ sea **regular** en $\\xi = \\pm 1$ "
+        "($\\theta = 0, \\pi$: los polos norte y sur), $\\ell$ debe ser "
+        "un **entero no negativo**. Las soluciones regulares son los "
+        "**polinomios de Legendre** $P_\\ell(\\xi) = P_\\ell(\\cos\\theta)$, "
+        "que forman una base ortogonal de $L^2([-1, 1])$:\n\n"
+        "$$\\int_{-1}^{1} P_\\ell(\\xi)\\, P_{\\ell'}(\\xi)\\, d\\xi "
+        "= \\tfrac{2}{2\\ell + 1}\\, \\delta_{\\ell \\ell'}.$$"
+    )
+
+
+def T_laplace_ball_radial() -> str:
+    return (
+        "La EDO radial es una **ecuación de Euler**:\n\n"
+        "$$r^2 R'' + 2 r R' - \\ell(\\ell + 1)\\, R = 0.$$\n\n"
+        "Probando $R = r^p$: $p(p-1) + 2p - \\ell(\\ell + 1) = 0$, "
+        "que se factoriza como $(p - \\ell)(p + \\ell + 1) = 0$. "
+        "Soluciones $R = r^\\ell$ y $R = r^{-\\ell - 1}$.\n\n"
+        "En una **bola sólida** descartamos $r^{-\\ell - 1}$ (diverge "
+        "en el origen). Queda $R(r) = r^\\ell$ salvo escala. La "
+        "solución general toma la forma\n\n"
+        "$$u(r, \\theta) = \\sum_{\\ell = 0}^{\\infty} A_\\ell\\, r^\\ell\\, "
+        "P_\\ell(\\cos\\theta).$$"
+    )
+
+
+def T_laplace_ball_coefficients() -> str:
+    return (
+        "Aplicamos la BC $u(R, \\theta) = f(\\theta)$. La serie en "
+        "$r = R$ es la expansión de $f$ en polinomios de Legendre:\n\n"
+        "$$f(\\theta) = \\sum_{\\ell} A_\\ell\\, R^\\ell\\, "
+        "P_\\ell(\\cos\\theta).$$\n\n"
+        "Por la ortogonalidad de los $P_\\ell$:\n\n"
+        "$$A_\\ell = \\frac{2\\ell + 1}{2 R^\\ell} \\int_{-1}^{1} "
+        "f(\\theta(\\xi))\\, P_\\ell(\\xi)\\, d\\xi = "
+        "\\frac{2\\ell + 1}{2 R^\\ell} \\int_0^\\pi f(\\theta)\\, "
+        "P_\\ell(\\cos\\theta)\\, \\sin\\theta\\, d\\theta.$$"
+    )
+
+
+def T_laplace_ball_physical_interpretation() -> str:
+    return (
+        "Tres lecturas:\n\n"
+        "- **Expansión multipolar.** Los términos $r^\\ell P_\\ell$ "
+        "son los **multipolos** del electromagnetismo y la "
+        "gravitación: $\\ell = 0$ es la **monopolo** (carga total), "
+        "$\\ell = 1$ es el **dipolo**, $\\ell = 2$ el **cuadrupolo**, …. "
+        "Una carga puntual fuera de la bola genera precisamente esta "
+        "serie como su potencial restringido a la bola.\n"
+        "- **Promedio esférico.** El término $\\ell = 0$ es "
+        "$A_0 = \\tfrac{1}{2}\\int_0^\\pi f \\sin\\theta\\, d\\theta$, "
+        "el promedio de $f$ sobre la esfera. En $r = 0$: "
+        "$u(0) = A_0$, el **teorema del valor medio** para funciones "
+        "armónicas en 3D.\n"
+        "- **Generalización (no axisimétrico).** Con dependencia en "
+        "$\\phi$ las autofunciones son los **armónicos esféricos** "
+        "$Y_\\ell^m(\\theta, \\phi)$, con $-\\ell \\leq m \\leq \\ell$. "
+        "La solución es $u = \\sum_{\\ell, m} A_{\\ell m}\\, r^\\ell\\, "
+        "Y_\\ell^m(\\theta, \\phi)$ con $A_{\\ell m}$ dado por "
+        "integrales sobre la esfera completa."
+    )

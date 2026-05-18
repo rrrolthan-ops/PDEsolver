@@ -6,16 +6,19 @@ pizarra, no como una calculadora que devuelve la respuesta final.
 
 ## Estado actual
 
-Este repositorio está en **Fase 2-C**. Lo que funciona hoy:
+Este repositorio está en **Fase 2-D**. Lo que funciona hoy:
 
 | EDP | Dominio | Método | Slug |
 |---|---|---|---|
 | Calor `u_t = α² u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `separation_of_variables` |
+| Calor `u_t = α²(u_rr + u_r/r)` | disco `r < R` axisimétrico | Bessel-Fourier | `sov_heat_disk` |
 | Onda `u_tt = c² u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `sov_wave_1d` |
 | Onda `u_tt = c² u_xx` | `x ∈ ℝ` | Fórmula de D'Alembert | `dalembert_wave_1d` |
+| Onda `u_tt = c²Δu` | disco `r < R` axisimétrico (tambor) | Bessel-Fourier | `sov_wave_disk` |
 | Laplace `∇²u = 0` | `[0, a] × [0, b]` | Separación de variables | `sov_laplace_rect` |
 | Laplace `∇²u = 0` | disco `r < R` | Separación en polares + Poisson | `sov_laplace_disk` |
 | Laplace `∇²u = 0` | semiplano `y > 0` | Método de imágenes | `images_halfplane` |
+| Laplace `∇²u = 0` | bola `r < R` axisimétrico | Legendre / multipolos | `sov_laplace_ball` |
 | Poisson `−u'' = f(x)` | `[0, L]`, Dirichlet 0 | Función de Green | `greens_function_1d` |
 | Helmholtz `Δu + k²u = f` | `[0, a] × [0, b]`, Dirichlet 0 | Expansión en autofunciones | `helmholtz_rect` |
 | Telégrafo `u_tt + 2αu_t + βu = c²u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `telegraph_sov` |
@@ -23,17 +26,18 @@ Este repositorio está en **Fase 2-C**. Lo que funciona hoy:
 | Transporte `u_t + c·u_x = 0` | `x ∈ ℝ` | Características | `characteristics_transport_1d` |
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 
-**83 tests pasando** (`pytest -v`).
+**99 tests pasando** (`pytest -v`).
 
 Cada método produce la misma estructura de **10 pasos** (Paso 0–9):
 planteamiento, clasificación, elección de método, desarrollo (incluyendo
 los tres casos de λ cuando aplica), aplicación de BCs/ICs, solución
 final, verificación simbólica, visualización y lectura física.
 
-Lo que **NO** está todavía: coordenadas cilíndricas/esféricas con
-Bessel/Legendre/armónicos esféricos. Llegan en Fase 2-D (si la haces).
-Tampoco: lenguaje natural (Fase 3), visión (Fase 4), exportación PDF y
-biblioteca (Fase 5).
+Lo que **NO** está todavía: armónicos esféricos completos (no
+axisimétricos en la bola), expansión modal completa del tambor con
+modos angulares $J_m \cos(m\theta)$, problemas con potencial $V(x)$
+no nulo en Schrödinger. Tampoco: lenguaje natural (Fase 3), visión
+(Fase 4), exportación PDF y biblioteca (Fase 5).
 
 ## Arquitectura
 
@@ -227,6 +231,57 @@ curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d 
 }'
 ```
 
+### Tambor circular (onda en disco axisimétrico)
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "u_{tt} = c^2*(u_{rr} + u_r/r)",
+  "equation_kind": "wave",
+  "geometry": "disk",
+  "domain": {"x": ["0", "R"], "t": ["0", "infty"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "r=R", "value": "0"}
+  ],
+  "initial_conditions": [
+    {"order": 0, "value": "1 - (r/R)^2"},
+    {"order": 1, "value": "0"}
+  ],
+  "parameters": {"R": "positive", "c": "positive"}
+}'
+```
+
+### Calor en disco axisimétrico
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "u_t = alpha^2*(u_{rr} + u_r/r)",
+  "equation_kind": "heat",
+  "geometry": "disk",
+  "domain": {"x": ["0", "R"], "t": ["0", "infty"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "r=R", "value": "0"}
+  ],
+  "initial_conditions": [{"order": 0, "value": "1"}],
+  "parameters": {"R": "positive", "alpha": "positive"}
+}'
+```
+
+### Laplace en bola (axisimétrico, expansión multipolar)
+
+```bash
+curl -X POST http://localhost:8000/solve -H "Content-Type: application/json" -d '{
+  "equation_latex": "\\nabla^2 u = 0",
+  "equation_kind": "laplace",
+  "geometry": "sphere",
+  "domain": {"x": ["0", "R"]},
+  "boundary_conditions": [
+    {"type": "dirichlet", "where": "r=R", "value": "cos(theta)"}
+  ],
+  "initial_conditions": [{"order": 0, "value": "0"}],
+  "parameters": {"R": "positive"}
+}'
+```
+
 ### Schrödinger en pozo infinito
 
 Partícula libre confinada en `[0, L]`:
@@ -337,16 +392,15 @@ Tijonov–Samarsky ("Equations of Mathematical Physics").
 
 ## Próximos hitos
 
-- **Fase 2-D** (opcional): coordenadas cilíndricas/esféricas con
-  funciones de Bessel, polinomios de Legendre y armónicos esféricos.
-  Requiere infraestructura especial-función adicional.
 - **Fase 3**: entrada por lenguaje natural (clasificador LLM, nunca
   resolvedor).
 - **Fase 4**: pipeline de visión (OpenCV + pix2tex + Nougat + Mathpix
   opcional).
 - **Fase 5**: exportación a PDF, biblioteca de problemas, pulido,
   plots para los métodos que hoy no los tienen (disco, Green 1D,
-  Helmholtz, imágenes, biarmónica).
+  Helmholtz, imágenes, biarmónica, bola, tambor).
+- **Extensiones** (sin fase numerada): armónicos esféricos completos,
+  modos angulares del tambor, Schrödinger con $V \neq 0$.
 
 ## Licencia
 

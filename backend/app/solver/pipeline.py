@@ -20,10 +20,13 @@ from app.solver.methods.images_halfplane import ImagesHalfPlane
 from app.solver.methods.schrodinger_well import SchrodingerInfiniteWell
 from app.solver.methods.separation_of_variables import SeparationOfVariablesHeat1D
 from app.solver.methods.sov_helmholtz_rect import HelmholtzRect
+from app.solver.methods.sov_heat_disk import HeatDisk
 from app.solver.methods.sov_laplace import SeparationOfVariablesLaplaceRect
+from app.solver.methods.sov_laplace_ball import LaplaceBall
 from app.solver.methods.sov_laplace_disk import SeparationOfVariablesLaplaceDisk
 from app.solver.methods.sov_telegraph import TelegraphSOV
 from app.solver.methods.sov_wave import SeparationOfVariablesWave1D
+from app.solver.methods.sov_wave_disk import WaveDisk
 from app.solver.numerics import convergence_snapshots, sample_2d
 
 
@@ -41,6 +44,9 @@ _METHODS = {
     "characteristics_transport_1d": CharacteristicsTransport1D(),
     "biharmonic_beam": BiharmonicBeam(),
     "images_halfplane": ImagesHalfPlane(),
+    "sov_wave_disk": WaveDisk(),
+    "sov_heat_disk": HeatDisk(),
+    "sov_laplace_ball": LaplaceBall(),
 }
 
 
