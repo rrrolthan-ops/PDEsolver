@@ -177,7 +177,11 @@ def _looks_like_telegraph(p: PDEProblem) -> bool:
 def _looks_like_schrodinger_well(p: PDEProblem) -> bool:
     """Schrödinger in a 1D infinite well: bounded interval + Dirichlet 0."""
     if p.equation_kind == "schrodinger":
-        return _has_1d_interval_domain(p) and _all_dirichlet_zero(p)
+        return (
+            _has_1d_interval_domain(p)
+            and not _is_unbounded_x(p)
+            and _all_dirichlet_zero(p)
+        )
     latex = p.equation_latex.replace(" ", "").lower()
     # `i*hbar*u_t = -hbar^2/(2*m)*u_xx` or variants.
     has_hbar = "hbar" in latex
@@ -186,8 +190,25 @@ def _looks_like_schrodinger_well(p: PDEProblem) -> bool:
         has_hbar
         and has_i_u_t
         and _has_1d_interval_domain(p)
+        and not _is_unbounded_x(p)
         and _all_dirichlet_zero(p)
     )
+
+
+def _looks_like_schrodinger_oscillator(p: PDEProblem) -> bool:
+    """Quantum harmonic oscillator: Schrödinger on the real line with V = ½mω²x²."""
+    latex_raw = p.equation_latex.replace(" ", "").lower()
+    has_omega_squared_x = "omega^2*x^2" in latex_raw or "omega^2x^2" in latex_raw
+    if p.equation_kind == "schrodinger":
+        # Strong signal: unbounded domain.
+        if _is_unbounded_x(p):
+            return True
+        # Bounded domain *plus* an explicit quadratic potential in
+        # the latex — also oscillator (a confined harmonic trap).
+        return has_omega_squared_x
+    # Fallback: equation_kind not set, but latex carries the signature.
+    has_hbar = "hbar" in latex_raw
+    return has_hbar and has_omega_squared_x and _is_unbounded_x(p)
 
 
 def _looks_like_characteristics_transport(p: PDEProblem) -> bool:
@@ -452,6 +473,30 @@ def _choice_schrodinger_well(_p: PDEProblem | None = None) -> MethodChoice:
     )
 
 
+def _choice_schrodinger_oscillator(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="schrodinger_oscillator",
+        rationale_md=(
+            "EDP de Schrödinger en la recta con potencial cuadrático "
+            "$V(x) = \\tfrac{1}{2} m \\omega^2 x^2$. Separación de "
+            "variables nos lleva a la **ecuación de Hermite-Weber**, "
+            "cuya cuantización por terminación de serie produce los "
+            "niveles equiespaciados $E_n = \\hbar\\omega(n + 1/2)$ y "
+            "las autofunciones gaussianas multiplicadas por **polinomios "
+            "de Hermite**."
+        ),
+        alternatives_md=(
+            "**Operadores de escalera** ($\\hat a, \\hat a^\\dagger$) son "
+            "la otra forma estándar de obtener el espectro y las "
+            "autofunciones, sin pasar por la EDO. **Funciones de Green** "
+            "(propagador del oscilador, fórmula de Mehler) dan la "
+            "solución como integral en $\\psi_0$. Aquí elegimos la "
+            "ruta vía Hermite porque es la más pedagógica para un "
+            "primer encuentro."
+        ),
+    )
+
+
 def _choice_characteristics(_p: PDEProblem | None = None) -> MethodChoice:
     return MethodChoice(
         method_slug="characteristics_transport_1d",
@@ -574,6 +619,11 @@ def _choice_images_halfplane(_p: PDEProblem | None = None) -> MethodChoice:
 
 _REGISTRY: list[tuple[Callable[[PDEProblem], bool], Callable[[PDEProblem | None], MethodChoice]]] = [
     # Most specific first.
+    # Schrödinger: the oscillator predicate is checked first because it
+    # captures the unbounded-x case; the well predicate explicitly
+    # excludes unbounded x. Without this order, a Schrödinger problem
+    # on the line could match neither and we'd raise NotImplementedError.
+    (_looks_like_schrodinger_oscillator, _choice_schrodinger_oscillator),
     (_looks_like_schrodinger_well, _choice_schrodinger_well),
     (_looks_like_biharmonic_beam, _choice_biharmonic_beam),
     (_looks_like_characteristics_transport, _choice_characteristics),

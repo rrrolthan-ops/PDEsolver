@@ -443,6 +443,63 @@ _REGISTRY: dict[str, DidacticObservation] = {
             "esférico del dato $f$."
         ),
     ),
+    # ---- Quantum harmonic oscillator -------------------------------------
+    "oscillator_quantization_from_termination": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**De dónde sale la cuantización.** La EDO de Hermite "
+            "$H'' - 2\\xi H' + (\\varepsilon - 1)H = 0$ tiene soluciones "
+            "en serie de potencias para **cualquier** $\\varepsilon$. Lo "
+            "que cuantiza el espectro es la condición de que la serie "
+            "**termine** en un polinomio — sin terminación, $H$ crece "
+            "como $e^{\\xi^2}$ y $\\varphi = H\\, e^{-\\xi^2/2}$ "
+            "explota en lugar de decaer. La terminación pasa exactamente "
+            "cuando $\\varepsilon = 2n + 1$ con $n$ entero no negativo. "
+            "La normalizabilidad es lo que selecciona el espectro discreto."
+        ),
+    ),
+    "oscillator_equispaced_spectrum": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Por qué el espectro es equiespaciado.** "
+            "$E_{n+1} - E_n = \\hbar\\omega$, constante para todo $n$. "
+            "Esta es **la** característica del oscilador armónico — "
+            "ningún otro potencial tiene espectro perfectamente "
+            "equiespaciado. Es lo que hace que los modos del campo "
+            "electromagnético cuantizado se comporten como **partículas** "
+            "(fotones), cada uno llevando una energía $\\hbar\\omega$: "
+            "los \"escalones\" entre niveles son siempre iguales, así "
+            "que sumar $N$ excitaciones es indistinguible de tener $N$ "
+            "partículas idénticas."
+        ),
+    ),
+    "oscillator_zero_point_energy": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Energía de punto cero.** "
+            "$E_0 = \\tfrac{1}{2}\\hbar\\omega > 0$: el oscilador "
+            "**no puede estar en reposo**. La interpretación es la "
+            "del principio de indeterminación, pero las consecuencias "
+            "son medibles: las vibraciones residuales de moléculas en "
+            "$T = 0$, el efecto Casimir (fuerza entre placas metálicas "
+            "debida a las fluctuaciones del vacío de QED), y la "
+            "estabilidad del átomo (sin punto cero, el electrón "
+            "colapsaría al núcleo)."
+        ),
+    ),
+    "oscillator_nodes_count": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**$\\varphi_n$ tiene exactamente $n$ nodos.** El polinomio "
+            "de Hermite $H_n$ es de grado $n$ con $n$ raíces reales. "
+            "$\\varphi_0$ es estrictamente positiva, $\\varphi_1$ "
+            "cambia de signo una vez, $\\varphi_2$ dos veces, etc. "
+            "Es un patrón general en Sturm-Liouville: el "
+            "**$n$-ésimo autoestado tiene $n$ ceros**, y eso permite "
+            "identificar visualmente a qué nivel corresponde una "
+            "función de onda."
+        ),
+    ),
 }
 
 

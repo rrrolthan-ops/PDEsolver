@@ -51,10 +51,11 @@ independientemente del modo de entrada.
 | Helmholtz `Δu + k²u = f` | `[0, a] × [0, b]`, Dirichlet 0 | Expansión en autofunciones | `helmholtz_rect` |
 | Telégrafo `u_tt + 2αu_t + βu = c²u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `telegraph_sov` |
 | Schrödinger pozo infinito `iℏψ_t = −ℏ²/(2m)ψ_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `schrodinger_well` |
+| Schrödinger oscilador armónico `iℏψ_t = −ℏ²/(2m)ψ_xx + ½mω²x²ψ` | `x ∈ ℝ` | Hermite | `schrodinger_oscillator` |
 | Transporte `u_t + c·u_x = 0` | `x ∈ ℝ` | Características | `characteristics_transport_1d` |
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 
-**150 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
+**157 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
 visualización**: superficies en `(x, t)` o `(x, y)`, gráficos 1D, o
 cortes meridionales según la geometría.
 

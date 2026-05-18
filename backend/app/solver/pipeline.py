@@ -17,6 +17,7 @@ from app.solver.methods.characteristics import CharacteristicsTransport1D
 from app.solver.methods.dalembert import DAlembertWave1D
 from app.solver.methods.green_1d import GreensFunction1D
 from app.solver.methods.images_halfplane import ImagesHalfPlane
+from app.solver.methods.schrodinger_oscillator import SchrodingerHarmonicOscillator
 from app.solver.methods.schrodinger_well import SchrodingerInfiniteWell
 from app.solver.methods.separation_of_variables import SeparationOfVariablesHeat1D
 from app.solver.methods.sov_helmholtz_rect import HelmholtzRect
@@ -55,6 +56,7 @@ _METHODS = {
     "sov_wave_disk": WaveDisk(),
     "sov_heat_disk": HeatDisk(),
     "sov_laplace_ball": LaplaceBall(),
+    "schrodinger_oscillator": SchrodingerHarmonicOscillator(),
 }
 
 
@@ -307,7 +309,99 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
         )
         return plot, None
 
+    # ---- Quantum harmonic oscillator: |ψ|² as a function of (x, t) -------
+
+    if slug == "schrodinger_oscillator":
+        plot = _sample_oscillator_density(expr, x_sym=x, t_sym=t)
+        return plot, None
+
     return None, None
+
+
+def _sample_oscillator_density(
+    expr: sp.Basic,
+    *,
+    x_sym: sp.Symbol,
+    t_sym: sp.Symbol,
+    n_terms: int = 8,
+    n_grid: tuple[int, int] = (60, 40),
+    x_range: tuple[float, float] = (-4.0, 4.0),
+    t_max: float = 6.28,
+) -> dict:
+    """Render the probability density `|ψ(x, t)|²` for the oscillator.
+
+    Why density and not `ψ`
+    -----------------------
+    The wavefunction is complex-valued, so plotting it directly would
+    require either the real part, the imaginary part, or both. The
+    physically meaningful observable is the **probability density**
+    `|ψ|²`, which is what students see in QM textbooks. For a single
+    eigenstate it's time-independent (the eigenfunction's gaussian-
+    times-Hermite shape); for a superposition it oscillates back and
+    forth with frequency `(E_n − E_m)/ℏ`.
+
+    Default constants
+    -----------------
+    Set `ℏ = m = ω = 1`. The natural length scale is then
+    `ℓ = √(ℏ/(mω)) = 1`, so `x ∈ [-4, 4]` is comfortable for any
+    eigenstate up to `n ≈ 6`. The time range covers one classical
+    period `2π/ω = 2π ≈ 6.28`, which lets a superposition oscillate
+    back to its starting density once.
+    """
+    import numpy as np
+
+    hbar = sp.Symbol("hbar", positive=True)
+    m = sp.Symbol("m", positive=True)
+    omega = sp.Symbol("omega", positive=True)
+    param_subs = {hbar: 1.0, m: 1.0, omega: 1.0}
+
+    if not isinstance(expr, sp.Sum):
+        return None  # unexpected shape — defer to the empty-plot fallback
+
+    dummies, body = _flatten_sum(expr)
+    # We truncate to the first `n_terms` eigenstates. For a Gaussian
+    # initial condition centered at the origin, most of the weight is in
+    # the first few modes.
+    syms = [d for d, _ in dummies]
+    ranges = [range(lo, lo + n_terms) for _, lo in dummies]
+
+    import itertools
+
+    total = sp.S.Zero
+    for vals in itertools.product(*ranges):
+        term_k = body.subs(dict(zip(syms, vals)))
+        if term_k.has(sp.Integral):
+            term_k = term_k.doit()
+        total = total + term_k
+
+    total = total.subs(param_subs)
+    # `lambdify` returns complex values; we square-modulus on the
+    # numpy side.
+    f = sp.lambdify((x_sym, t_sym), total, modules=["scipy", "numpy"])
+
+    xs = np.linspace(*x_range, n_grid[0])
+    ts = np.linspace(0.0, t_max, n_grid[1])
+    X, Tt = np.meshgrid(xs, ts, indexing="xy")
+
+    psi = np.asarray(f(X, Tt), dtype=complex)
+    density = np.abs(psi) ** 2
+
+    return {
+        "kind": "surface_xt",
+        "x": xs.tolist(),
+        "t": ts.tolist(),
+        "u": density.tolist(),
+    }
+
+
+def _flatten_sum(expr: sp.Basic) -> tuple[list[tuple[sp.Symbol, int]], sp.Basic]:
+    """Mirror of `numerics._flatten_sum_limits`, kept private here so
+    pipeline.py doesn't need to import that helper."""
+    if not isinstance(expr, sp.Sum):
+        return [], expr
+    dummies = [(L[0], int(L[1])) for L in expr.limits]
+    inner_dummies, body = _flatten_sum(expr.function)
+    return dummies + inner_dummies, body
 
 
 # ---------------------------------------------------------------------------

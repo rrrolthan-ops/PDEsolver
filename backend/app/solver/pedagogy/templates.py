@@ -1501,3 +1501,170 @@ def T_laplace_ball_physical_interpretation() -> str:
         "Y_\\ell^m(\\theta, \\phi)$ con $A_{\\ell m}$ dado por "
         "integrales sobre la esfera completa."
     )
+
+
+# ===========================================================================
+# SCHRÖDINGER — quantum harmonic oscillator (V = ½ m ω² x²)
+# ===========================================================================
+
+def T_statement_schrodinger_oscillator() -> str:
+    return (
+        "Resolvemos la **ecuación de Schrödinger con potencial armónico**:\n\n"
+        "$$i\\hbar\\, \\psi_t = -\\frac{\\hbar^2}{2m}\\, \\psi_{xx} + "
+        "\\tfrac{1}{2} m \\omega^2 x^2\\, \\psi, \\quad x \\in \\mathbb{R},\\ t > 0.$$\n\n"
+        "Es el modelo más estudiado de la mecánica cuántica: una partícula "
+        "atrapada en un pozo parabólico de frecuencia clásica $\\omega$. "
+        "Aparece como **aproximación de bajo orden** alrededor del mínimo "
+        "de cualquier potencial suave, así que su espectro y autofunciones "
+        "describen el comportamiento universal cerca del equilibrio (vibraciones "
+        "moleculares, modos del campo electromagnético cuantizado, fonones, …).\n\n"
+        "Como en el pozo infinito, la incógnita $\\psi$ es **compleja** y "
+        "lo observable es $|\\psi|^2$. A diferencia del pozo, ahora **no hay "
+        "paredes**: las condiciones de contorno son que $\\psi \\to 0$ "
+        "cuando $|x| \\to \\infty$ (la partícula está confinada por el "
+        "potencial, no por una caja)."
+    )
+
+
+def T_oscillator_method_choice() -> str:
+    return (
+        "**Separación de variables** funciona porque la EDP es lineal y la "
+        "dependencia temporal está desacoplada: $\\psi(x, t) = \\varphi(x) "
+        "T(t)$. La novedad respecto al pozo infinito es que la "
+        "ecuación espacial pasa a tener un coeficiente que **depende de "
+        "$x$** ($\\tfrac{1}{2} m \\omega^2 x^2$), lo que la convierte en un "
+        "problema de Sturm-Liouville más rico — uno cuyas autofunciones "
+        "son **polinomios de Hermite** multiplicados por una gaussiana, "
+        "y cuyos autovalores son los famosos niveles de energía "
+        "equiespaciados $E_n = \\hbar\\omega(n + 1/2)$."
+    )
+
+
+def T_oscillator_separation() -> str:
+    return (
+        "Probamos $\\psi(x, t) = \\varphi(x)\\, T(t)$ y sustituimos:\n\n"
+        "$$i\\hbar\\, \\varphi(x)\\, T'(t) = "
+        "\\left[-\\frac{\\hbar^2}{2m}\\, \\varphi''(x) + "
+        "\\tfrac{1}{2} m \\omega^2 x^2 \\varphi(x)\\right]\\, T(t).$$\n\n"
+        "Dividiendo por $\\varphi(x) T(t)$ separamos: el lado izquierdo "
+        "depende sólo de $t$, el derecho sólo de $x$. Llamamos $E$ a "
+        "la constante de separación (anticipando su interpretación "
+        "física como energía):"
+    )
+
+
+def T_oscillator_tise() -> str:
+    return (
+        "La **EDO temporal** es de primer orden con coeficiente imaginario, "
+        "idéntica al caso del pozo:\n\n"
+        "$$T(t) = T_0\\, e^{-i E t / \\hbar}.$$\n\n"
+        "La **ecuación de Schrödinger independiente del tiempo (TISE)** es:\n\n"
+        "$$-\\frac{\\hbar^2}{2m}\\, \\varphi''(x) + "
+        "\\tfrac{1}{2} m \\omega^2 x^2 \\varphi(x) = E\\, \\varphi(x).$$\n\n"
+        "Este es el corazón pedagógico del problema. A diferencia del pozo "
+        "(donde la TISE era $\\varphi'' + k^2 \\varphi = 0$ con $k$ constante), "
+        "ahora el coeficiente de $\\varphi$ depende de $x$. Toca un cambio "
+        "de variable para limpiar las constantes."
+    )
+
+
+def T_oscillator_dimensionless() -> str:
+    return (
+        "**Adimensionalizamos.** Definimos la longitud característica del "
+        "oscilador $\\ell = \\sqrt{\\hbar / (m\\omega)}$ y la variable "
+        "$\\xi = x / \\ell = \\sqrt{m\\omega/\\hbar}\\, x$. Con el cambio "
+        "$\\varepsilon = 2E/(\\hbar\\omega)$ la TISE queda:\n\n"
+        "$$\\varphi''(\\xi) + (\\varepsilon - \\xi^2)\\, \\varphi(\\xi) = 0.$$\n\n"
+        "Hemos absorbido todas las constantes dimensionales en $\\ell$ y "
+        "$\\varepsilon$. Lo que queda es la **ecuación de Hermite-Weber**, "
+        "una EDO clásica cuyas soluciones físicamente aceptables (las que "
+        "decaen al infinito) están parametrizadas por un entero $n \\geq 0$."
+    )
+
+
+def T_oscillator_asymptotic_and_hermite() -> str:
+    return (
+        "**Análisis asintótico.** Para $|\\xi| \\to \\infty$ el término "
+        "$\\varepsilon$ es despreciable frente a $\\xi^2$, y la EDO se "
+        "comporta como $\\varphi'' \\approx \\xi^2 \\varphi$. Las dos "
+        "soluciones asintóticas son $\\varphi \\sim e^{\\pm \\xi^2/2}$. "
+        "La condición de normalización ($\\int |\\varphi|^2 < \\infty$) "
+        "descarta la creciente; queda la **gaussiana decreciente** "
+        "$\\varphi \\sim e^{-\\xi^2/2}$.\n\n"
+        "**Ansatz.** Buscamos $\\varphi(\\xi) = H(\\xi)\\, e^{-\\xi^2/2}$ "
+        "con $H$ polinómica. Sustituyendo en la EDO y usando que "
+        "$(He^{-\\xi^2/2})'' = (H'' - 2\\xi H' + (\\xi^2 - 1) H)\\, e^{-\\xi^2/2}$:\n\n"
+        "$$H''(\\xi) - 2\\xi H'(\\xi) + (\\varepsilon - 1)\\, H(\\xi) = 0.$$\n\n"
+        "Esta es la **ecuación de Hermite**. La condición de que $H$ sea "
+        "polinómica (y por tanto $\\varphi$ normalizable) **cuantiza $\\varepsilon$**: "
+        "sólo $\\varepsilon = 2n + 1$ con $n \\in \\{0, 1, 2, \\dots\\}$ da "
+        "soluciones que terminan en grado finito."
+    )
+
+
+def T_oscillator_eigenvalues() -> str:
+    return (
+        "Despejando $E$ de $\\varepsilon = 2n + 1 = 2E/(\\hbar\\omega)$:\n\n"
+        "$$\\boxed{\\;E_n = \\hbar\\omega\\!\\left(n + \\tfrac{1}{2}\\right),"
+        "\\quad n = 0, 1, 2, \\dots\\;}$$\n\n"
+        "Y las autofunciones, normalizadas en $L^2(\\mathbb{R})$:\n\n"
+        "$$\\varphi_n(x) = \\sqrt{\\frac{\\alpha}{2^n\\, n!\\, \\sqrt{\\pi}}}\\, "
+        "H_n(\\alpha x)\\, e^{-\\alpha^2 x^2 / 2},\\quad "
+        "\\alpha = \\sqrt{m\\omega/\\hbar},$$\n\n"
+        "donde $H_n$ es el **polinomio de Hermite físico** "
+        "($H_0 = 1$, $H_1 = 2\\xi$, $H_2 = 4\\xi^2 - 2$, $H_3 = 8\\xi^3 - 12\\xi$, …). "
+        "La constante de normalización viene de la integral de Hermite "
+        "$\\int H_n(\\xi)^2\\, e^{-\\xi^2}\\, d\\xi = 2^n n! \\sqrt{\\pi}$."
+    )
+
+
+def T_oscillator_ground_state_energy() -> str:
+    return (
+        "**Energía del estado fundamental: $E_0 = \\tfrac{1}{2}\\hbar\\omega > 0$.** "
+        "Igual que en el pozo, no existe un estado cuántico de energía cero. "
+        "La interpretación física es la misma — el principio de "
+        "indeterminación — pero el contexto es más rico: aquí la "
+        "**energía de punto cero** $\\tfrac{1}{2}\\hbar\\omega$ tiene "
+        "consecuencias medibles (vibraciones residuales de moléculas a $T = 0$, "
+        "efecto Casimir, fluctuaciones del vacío en QFT)."
+    )
+
+
+def T_oscillator_superposition() -> str:
+    return (
+        "La solución general es la **superposición** de los estados "
+        "estacionarios, cada uno rotando con su fase propia "
+        "$e^{-i E_n t / \\hbar}$:\n\n"
+        "$$\\psi(x, t) = \\sum_{n=0}^{\\infty} c_n\\, \\varphi_n(x)\\, "
+        "e^{-i\\omega(n + 1/2)\\, t}.$$\n\n"
+        "Los coeficientes $c_n$ se determinan por la condición inicial "
+        "$\\psi(x, 0) = \\psi_0(x)$ usando **ortonormalidad** de las "
+        "$\\varphi_n$:\n\n"
+        "$$c_n = \\int_{-\\infty}^{\\infty} \\varphi_n(x)\\, \\psi_0(x)\\, dx.$$"
+    )
+
+
+def T_oscillator_physical_interpretation() -> str:
+    return (
+        "Lecturas físicas del oscilador armónico cuántico:\n\n"
+        "- **Espectro equiespaciado.** $E_{n+1} - E_n = \\hbar\\omega$, "
+        "constante. Esta es la razón por la que los fonones (vibraciones de "
+        "red cristalina) y los fotones (modos del campo EM) llevan **un "
+        "cuanto de energía $\\hbar\\omega$**: cada oscilador armónico se "
+        "excita en pasos discretos del mismo tamaño. Es lo que hace que "
+        "los osciladores se comporten **como partículas** al cuantizar.\n"
+        "- **Estado fundamental gaussiano.** $\\varphi_0(x) \\propto "
+        "e^{-\\alpha^2 x^2/2}$. La densidad de probabilidad "
+        "$|\\varphi_0|^2$ es una gaussiana centrada en el origen, "
+        "ancho $\\sim \\ell = \\sqrt{\\hbar/(m\\omega)}$. **No** está "
+        "concentrada en el mínimo del potencial como predeciría la "
+        "mecánica clásica: el principio de indeterminación la dispersa.\n"
+        "- **Estados excitados.** $\\varphi_n$ tiene exactamente $n$ "
+        "nodos. El polinomio $H_n(\\alpha x)$ es de grado $n$ con $n$ "
+        "raíces reales — los puntos donde la función de onda se anula.\n"
+        "- **Estados coherentes.** Una superposición especial de "
+        "$\\varphi_n$ (con $c_n = e^{-|z|^2/2}\\, z^n/\\sqrt{n!}$) produce "
+        "una gaussiana que **oscila clásicamente** alrededor del "
+        "mínimo. Conecta el mundo cuántico con el clásico — los "
+        "**estados de luz coherente** del láser son su análogo en QED."
+    )
