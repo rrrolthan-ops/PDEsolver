@@ -53,10 +53,11 @@ independientemente del modo de entrada.
 | Telégrafo `u_tt + 2αu_t + βu = c²u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `telegraph_sov` |
 | Schrödinger pozo infinito `iℏψ_t = −ℏ²/(2m)ψ_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `schrodinger_well` |
 | Schrödinger oscilador armónico `iℏψ_t = −ℏ²/(2m)ψ_xx + ½mω²x²ψ` | `x ∈ ℝ` | Hermite | `schrodinger_oscillator` |
+| Schrödinger libre `iℏψ_t = −ℏ²/(2m)ψ_xx` | `x ∈ ℝ` | Transformada de Fourier / propagador libre | `schrodinger_free` |
 | Transporte `u_t + c·u_x = 0` | `x ∈ ℝ` | Características | `characteristics_transport_1d` |
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 
-**169 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
+**182 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
 visualización**: superficies en `(x, t)` o `(x, y)`, gráficos 1D, o
 cortes meridionales según la geometría.
 

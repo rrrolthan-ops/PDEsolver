@@ -548,6 +548,69 @@ _REGISTRY: dict[str, DidacticObservation] = {
             "información viaja como mucho a velocidad $c$ (cono de luz)."
         ),
     ),
+    "wick_rotation_heat_to_schrodinger": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**Rotación de Wick: calor ↔ Schrödinger.** "
+            "Si en la ecuación del calor $u_t = \\alpha^2 u_{xx}$ "
+            "hacemos la sustitución $t \\to i t$ (rotación de Wick), "
+            "obtenemos $-i u_t = \\alpha^2 u_{xx}$, formalmente "
+            "equivalente a Schrödinger con $\\alpha^2 = \\hbar/(2m)$. "
+            "Esta correspondencia es **profunda**: convierte el "
+            "decaimiento exponencial real de los modos del calor en "
+            "la rotación de fase pura de la mecánica cuántica, y es "
+            "la base de la **formulación de integral de camino de "
+            "Feynman** — donde sumar amplitudes cuánticas se ve como "
+            "sumar exponenciales \"evaluadas en tiempo imaginario\"."
+        ),
+    ),
+    "schrodinger_dispersion": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Dispersión $\\omega(k) = \\hbar k^2 / (2m)$.** "
+            "La relación de dispersión es **cuadrática** en $k$, no "
+            "lineal (como en la onda $\\omega = ck$) ni cuadrática "
+            "imaginaria (como en el calor $\\omega = -i\\alpha^2 k^2$). "
+            "La cuadratura real implica dos cosas: (1) velocidad de "
+            "fase $v_\\phi = \\omega/k = \\hbar k/(2m)$ depende de $k$ "
+            "→ **dispersión**, paquetes se ensanchan; (2) velocidad "
+            "de grupo $v_g = d\\omega/dk = \\hbar k/m = p/m$ coincide "
+            "con la velocidad clásica → **principio de correspondencia**, "
+            "el centro del paquete sigue la trayectoria newtoniana."
+        ),
+    ),
+    "schrodinger_wave_packet_spreading": DidacticObservation(
+        kind="pitfall",
+        text_md=(
+            "**El paquete se ensancha incluso sin fuerzas.** "
+            "Un paquete gaussiano libre con anchura inicial $\\sigma_0$ "
+            "evoluciona a $\\sigma(t) = \\sigma_0 \\sqrt{1 + "
+            "(\\hbar t / (2 m \\sigma_0^2))^2}$. Asintóticamente, "
+            "$\\sigma(t) \\sim \\hbar t / (2 m \\sigma_0)$ — lineal en "
+            "$t$, **no $\\sqrt{t}$ como el calor**. Físicamente: el "
+            "principio de indeterminación obliga a que un paquete "
+            "estrecho en posición ($\\sigma_0$ pequeño) tenga gran "
+            "incertidumbre en momento ($\\sim \\hbar/\\sigma_0$), y por "
+            "tanto una gama de velocidades clásicas — el paquete se "
+            "expande precisamente porque sus componentes viajan a "
+            "velocidades distintas."
+        ),
+    ),
+    "schrodinger_no_bound_states": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**Espectro puramente continuo.** A diferencia del oscilador "
+            "armónico (espectro discreto $E_n = \\hbar\\omega(n+1/2)$) "
+            "o del pozo infinito ($E_n = n^2\\hbar^2\\pi^2/(2mL^2)$), "
+            "el hamiltoniano libre $\\hat H = -\\hbar^2\\partial_x^2/(2m)$ "
+            "tiene **espectro continuo** $E \\in [0, \\infty)$, sin "
+            "estados ligados normalizables. Las \"autofunciones\" "
+            "$e^{ikx}$ no son elementos de $L^2(\\mathbb{R})$: son "
+            "**distribuciones** que se usan vía paquetes de onda. "
+            "Esto refleja el hecho físico de que **una partícula libre "
+            "no puede estar confinada**."
+        ),
+    ),
     "gaussian_smoothing": DidacticObservation(
         kind="intuition",
         text_md=(

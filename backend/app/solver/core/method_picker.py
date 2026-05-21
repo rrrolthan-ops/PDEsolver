@@ -214,7 +214,13 @@ def _looks_like_schrodinger_oscillator(p: PDEProblem) -> bool:
     latex_raw = p.equation_latex.replace(" ", "").lower()
     has_omega_squared_x = "omega^2*x^2" in latex_raw or "omega^2x^2" in latex_raw
     if p.equation_kind == "schrodinger":
-        # Strong signal: unbounded domain.
+        # The oscillator is *specifically* the case with a quadratic
+        # potential. Free Schrödinger on the line (no potential) routes
+        # to `_looks_like_schrodinger_free` instead — so we now require
+        # the explicit ω²x² signature in latex (or a `parameters` entry
+        # for `omega`) to claim this slot.
+        if not has_omega_squared_x and "omega" not in p.parameters:
+            return False
         if _is_unbounded_x(p):
             return True
         # Bounded domain *plus* an explicit quadratic potential in
@@ -223,6 +229,27 @@ def _looks_like_schrodinger_oscillator(p: PDEProblem) -> bool:
     # Fallback: equation_kind not set, but latex carries the signature.
     has_hbar = "hbar" in latex_raw
     return has_hbar and has_omega_squared_x and _is_unbounded_x(p)
+
+
+def _looks_like_schrodinger_free(p: PDEProblem) -> bool:
+    """Free particle: Schrödinger on the real line with V = 0."""
+    latex_raw = p.equation_latex.replace(" ", "").lower()
+    has_omega_squared_x = "omega^2*x^2" in latex_raw or "omega^2x^2" in latex_raw
+    # A potential of any other shape (V(x)*u, V*u, etc.) excludes us;
+    # we only handle the pure-kinetic-energy case here.
+    has_potential_term = "v(x)" in latex_raw or "+v*" in latex_raw
+    if has_omega_squared_x or has_potential_term:
+        return False
+    if p.equation_kind == "schrodinger":
+        return _is_unbounded_x(p)
+    has_hbar = "hbar" in latex_raw
+    has_i_u_t = (
+        "i*hbar*u_t" in latex_raw
+        or "ihbar*u_t" in latex_raw
+        or "i\\hbaru_t" in latex_raw
+        or "i*hbar\\psi_t" in latex_raw
+    )
+    return has_hbar and has_i_u_t and _is_unbounded_x(p)
 
 
 def _looks_like_characteristics_transport(p: PDEProblem) -> bool:
@@ -511,6 +538,35 @@ def _choice_schrodinger_well(_p: PDEProblem | None = None) -> MethodChoice:
     )
 
 
+def _choice_schrodinger_free(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="schrodinger_free",
+        rationale_md=(
+            "Schrödinger sin potencial ($V \\equiv 0$) en la **recta "
+            "entera**. Como no hay BCs, no hay autovalores discretos: "
+            "el espectro del Hamiltoniano libre es **continuo**. La "
+            "**transformada de Fourier** diagonaliza $\\partial_x^2$ y "
+            "convierte la EDP en una EDO modal con coeficiente "
+            "imaginario, $\\partial_t \\hat\\psi = -i\\omega(k)\\hat\\psi$ "
+            "con relación de dispersión $\\omega(k) = \\hbar k^2/(2m)$. "
+            "La inversa devuelve $\\psi$ como convolución con el "
+            "**propagador libre** de Feynman."
+        ),
+        alternatives_md=(
+            "**Métodos descartados:** *Separación de variables* — no "
+            "aplica (dominio no acotado, sin BCs que cuanticen). "
+            "*Operadores de escalera* — son específicos del oscilador "
+            "armónico. *Funciones de Green* — daría exactamente el "
+            "mismo propagador, ya que $K$ es la función de Green del "
+            "operador $i\\hbar\\partial_t + \\tfrac{\\hbar^2}{2m}\\partial_x^2$ "
+            "con condición inicial $K(x, 0) = \\delta(x)$. **Integral "
+            "de camino de Feynman** — recupera $K$ como suma sobre "
+            "trayectorias clásicas con peso $e^{iS/\\hbar}$; ruta "
+            "pedagógica más profunda pero menos elemental."
+        ),
+    )
+
+
 def _choice_schrodinger_oscillator(_p: PDEProblem | None = None) -> MethodChoice:
     return MethodChoice(
         method_slug="schrodinger_oscillator",
@@ -657,10 +713,13 @@ def _choice_images_halfplane(_p: PDEProblem | None = None) -> MethodChoice:
 
 _REGISTRY: list[tuple[Callable[[PDEProblem], bool], Callable[[PDEProblem | None], MethodChoice]]] = [
     # Most specific first.
-    # Schrödinger: the oscillator predicate is checked first because it
-    # captures the unbounded-x case; the well predicate explicitly
-    # excludes unbounded x. Without this order, a Schrödinger problem
-    # on the line could match neither and we'd raise NotImplementedError.
+    # Schrödinger: three cases on disjoint signatures.
+    #   - free: unbounded x, no ω²x² potential.
+    #   - oscillator: ω²x² potential present (either bounded or unbounded x).
+    #   - well: bounded interval with Dirichlet 0 BCs.
+    # `free` is registered first because its predicate explicitly
+    # excludes the oscillator signature, so it never poaches.
+    (_looks_like_schrodinger_free, _choice_schrodinger_free),
     (_looks_like_schrodinger_oscillator, _choice_schrodinger_oscillator),
     (_looks_like_schrodinger_well, _choice_schrodinger_well),
     (_looks_like_biharmonic_beam, _choice_biharmonic_beam),
@@ -693,8 +752,8 @@ def pick_method(problem: PDEProblem) -> MethodChoice:
         "y Fourier en la línea) y en disco, onda 1D (SOV y D'Alembert) "
         "y en disco (tambor), Laplace en rectángulo, disco, bola y "
         "semiplano, Poisson 1D (Green), Helmholtz en rectángulo, "
-        "telégrafo, Schrödinger en pozo infinito y oscilador armónico, "
-        "transporte 1D por características, biarmónica/viga 1D."
+        "telégrafo, Schrödinger libre, en pozo infinito y oscilador "
+        "armónico, transporte 1D por características, biarmónica/viga 1D."
     )
 
 

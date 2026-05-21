@@ -1795,3 +1795,140 @@ def T_heat_line_physical_interpretation() -> str:
         "$u(x, t) \\to 0$ uniformemente cuando $t \\to \\infty$ (todo "
         "el calor inicial se ha esparcido al infinito)."
     )
+
+
+# ===========================================================================
+# Free Schrödinger on the real line (Fourier transform / complex Gaussian)
+# ===========================================================================
+
+def T_statement_schrodinger_free() -> str:
+    return (
+        "Resolvemos la **ecuación de Schrödinger libre en la recta**:\n\n"
+        "$$i\\hbar\\, \\psi_t = -\\frac{\\hbar^2}{2m}\\, \\psi_{xx}, "
+        "\\quad x \\in \\mathbb{R},\\ t > 0,\\qquad \\psi(x, 0) = \\psi_0(x).$$\n\n"
+        "Es el caso $V(x) = 0$: no hay potencial, no hay paredes, no hay "
+        "estados ligados. La partícula se propaga **libremente** sobre "
+        "$\\mathbb{R}$. La herramienta natural es la **transformada de "
+        "Fourier**: $\\partial_x$ no tiene autovalores discretos en "
+        "$L^2(\\mathbb{R})$, pero sí un espectro continuo "
+        "$\\{e^{ikx}\\}_{k \\in \\mathbb{R}}$."
+    )
+
+
+def T_schrodinger_free_method_choice() -> str:
+    return (
+        "**Por qué Fourier.** Igual que en el calor en la recta, el "
+        "dominio no acotado mata la separación de variables clásica "
+        "(no hay BCs que produzcan autovalores discretos). Las "
+        "**ondas planas** $e^{ikx}$ son las autofunciones generalizadas "
+        "de $\\partial_x$ con autovalor $ik$, parametrizadas por el "
+        "**número de onda** $k \\in \\mathbb{R}$. Físicamente $k$ está "
+        "ligado al **momento** $p = \\hbar k$, así que la transformada "
+        "de Fourier es literalmente el cambio de la **representación "
+        "de posición** a la **representación de momento**.\n\n"
+        "**Contraste con el calor.** El procedimiento será idéntico al "
+        "de la ecuación del calor — diagonalizar $\\partial_x^2$, "
+        "resolver la EDO modal, invertir — pero el coeficiente de la "
+        "EDO modal es **imaginario puro** (no real negativo). Esto "
+        "cambia radicalmente la física: en lugar de **decaimiento** "
+        "tendremos **rotación de fase**, y en lugar de **difusión** "
+        "tendremos **dispersión**."
+    )
+
+
+def T_schrodinger_free_pde_to_ode() -> str:
+    return (
+        "Aplicamos $\\mathcal{F}$ a $i\\hbar\\, \\psi_t = "
+        "-\\tfrac{\\hbar^2}{2m}\\, \\psi_{xx}$. Recordando "
+        "$\\mathcal{F}[\\psi_{xx}] = -k^2\\, \\hat\\psi$:\n\n"
+        "$$i\\hbar\\, \\partial_t \\hat\\psi(k, t) = \\frac{\\hbar^2 k^2}{2m}\\, "
+        "\\hat\\psi(k, t)\\quad\\Longleftrightarrow\\quad "
+        "\\partial_t \\hat\\psi = -i\\, \\omega(k)\\, \\hat\\psi,$$\n\n"
+        "donde $\\omega(k) = \\hbar k^2 / (2m)$ es la **relación de "
+        "dispersión** de la partícula libre — el análogo cuántico de "
+        "la **energía cinética** $E = p^2/(2m)$ con $p = \\hbar k$ y "
+        "$E = \\hbar\\omega$.\n\n"
+        "**Lo crucial.** El coeficiente $-i\\omega(k)$ es **imaginario "
+        "puro**. En el calor era $-\\alpha^2 k^2$ (real negativo) → "
+        "exponencial real decreciente → difusión. Aquí será una "
+        "exponencial **compleja** → rotación de fase pura → "
+        "norma $L^2$ conservada → unitariedad cuántica."
+    )
+
+
+def T_schrodinger_free_solve_ode() -> str:
+    return (
+        "La EDO temporal se resuelve directamente:\n\n"
+        "$$\\hat\\psi(k, t) = \\hat\\psi_0(k)\\, e^{-i \\omega(k) t} = "
+        "\\hat\\psi_0(k)\\, \\exp\\!\\left(-i\\, \\frac{\\hbar k^2}{2m}\\, t\\right).$$\n\n"
+        "**Cada modo $k$ rota con frecuencia $\\omega(k) = \\hbar k^2/(2m)$.** "
+        "A diferencia del calor (donde modos altos *decaen* más rápido) "
+        "y de la onda (donde todos los modos avanzan a la misma "
+        "velocidad $c$), aquí cada modo gira a una velocidad de fase "
+        "**distinta**: $v_\\phi(k) = \\omega(k)/k = \\hbar k/(2m)$. "
+        "Esa dependencia de $k$ es la **dispersión**, y es la responsable "
+        "de que los paquetes de onda **se ensanchen** con el tiempo."
+    )
+
+
+def T_schrodinger_free_inverse() -> str:
+    return (
+        "Para recuperar $\\psi(x, t)$ aplicamos la inversa. Tal como "
+        "en el calor, reconocemos la estructura producto en $k$ y "
+        "usamos el teorema de convolución:\n\n"
+        "$$\\hat\\psi(k, t) = \\hat\\psi_0(k)\\, \\hat K(k, t),\\qquad "
+        "\\hat K(k, t) = e^{-i\\hbar k^2 t / (2m)},$$\n\n"
+        "así que $\\psi(x, t) = (\\psi_0 * K)(x, t)$. La inversa de "
+        "$\\hat K$ es una **gaussiana compleja** (el análogo cuántico "
+        "del núcleo del calor, obtenido vía rotación de Wick "
+        "$t \\to it$):\n\n"
+        "$$\\boxed{\\;K(x, t) = \\sqrt{\\frac{m}{2\\pi i \\hbar t}}\\, "
+        "\\exp\\!\\left(\\frac{i m x^2}{2 \\hbar t}\\right).\\;}$$\n\n"
+        "Este $K$ es el famoso **propagador libre** de Feynman, la "
+        "amplitud de probabilidad de que una partícula que parte en "
+        "$y$ llegue a $x$ en tiempo $t$."
+    )
+
+
+def T_schrodinger_free_final_formula() -> str:
+    return (
+        "La solución cerrada es la convolución del dato inicial con el "
+        "**propagador libre**:\n\n"
+        "$$\\boxed{\\;\\psi(x, t) = \\sqrt{\\frac{m}{2\\pi i \\hbar t}}\\, "
+        "\\int_{-\\infty}^{\\infty} \\exp\\!\\left(\\frac{i m (x - y)^2}{2 \\hbar t}\\right) "
+        "\\psi_0(y)\\, dy.\\;}$$\n\n"
+        "**Estructura.** Es exactamente la fórmula del calor con "
+        "$\\alpha^2 \\leftrightarrow i\\hbar/(2m)$ — la sustitución que "
+        "convierte la ecuación de difusión real en la de difusión "
+        "imaginaria. Esta correspondencia es la **rotación de Wick** "
+        "y es la base de la formulación de Feynman de la mecánica "
+        "cuántica como suma sobre caminos."
+    )
+
+
+def T_schrodinger_free_physical_interpretation() -> str:
+    return (
+        "Cuatro lecturas físicas del propagador libre:\n\n"
+        "- **Unitariedad.** $|K(x, t)|^2 = m/(2\\pi\\hbar t)$ es real, "
+        "independiente de $x$ (¡el módulo es constante en $x$!). La "
+        "norma $L^2$ de $\\psi$ se conserva: la probabilidad total "
+        "$\\int |\\psi|^2\\, dx$ no cambia con el tiempo. Esto es lo "
+        "que reemplaza el decaimiento difusivo del calor.\n"
+        "- **Dispersión: el paquete se ensancha linealmente en $t$.** "
+        "Un paquete gaussiano inicial con anchura $\\sigma_0$ tiene "
+        "anchura $\\sigma(t) = \\sigma_0 \\sqrt{1 + (\\hbar t/(2m\\sigma_0^2))^2}$. "
+        "Para tiempos largos, $\\sigma(t) \\sim \\hbar t / (2 m \\sigma_0)$ — "
+        "**crecimiento lineal en $t$**, no $\\sqrt{t}$ como en el calor.\n"
+        "- **Velocidad de fase vs velocidad de grupo.** Cada modo $k$ "
+        "tiene velocidad de fase $v_\\phi = \\hbar k / (2m)$ y velocidad "
+        "de grupo $v_g = d\\omega/dk = \\hbar k / m = p/m$. La velocidad "
+        "del grupo coincide con la velocidad clásica $p/m$ — el "
+        "**centro del paquete sigue la trayectoria newtoniana**, "
+        "aunque el paquete se ensanche a su alrededor.\n"
+        "- **No hay estados estacionarios normalizables.** A diferencia "
+        "del pozo y del oscilador, no existen autoestados $L^2$ del "
+        "Hamiltoniano libre — el espectro es **puramente continuo** "
+        "$E = \\hbar^2 k^2/(2m) \\ge 0$. Las \"autofunciones\" "
+        "$e^{ikx}$ no pertenecen a $L^2$ (son distribuciones)."
+    )
+

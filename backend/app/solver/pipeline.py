@@ -18,6 +18,7 @@ from app.solver.methods.dalembert import DAlembertWave1D
 from app.solver.methods.fourier_heat_line import FourierHeatLine
 from app.solver.methods.green_1d import GreensFunction1D
 from app.solver.methods.images_halfplane import ImagesHalfPlane
+from app.solver.methods.schrodinger_free import SchrodingerFreeLine
 from app.solver.methods.schrodinger_oscillator import SchrodingerHarmonicOscillator
 from app.solver.methods.schrodinger_well import SchrodingerInfiniteWell
 from app.solver.methods.separation_of_variables import SeparationOfVariablesHeat1D
@@ -59,6 +60,7 @@ _METHODS = {
     "sov_heat_disk": HeatDisk(),
     "sov_laplace_ball": LaplaceBall(),
     "schrodinger_oscillator": SchrodingerHarmonicOscillator(),
+    "schrodinger_free": SchrodingerFreeLine(),
 }
 
 
@@ -327,6 +329,10 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
         plot = _sample_oscillator_density(expr, x_sym=x, t_sym=t)
         return plot, None
 
+    if slug == "schrodinger_free":
+        plot = _sample_schrodinger_free_density(expr, x_sym=x, t_sym=t)
+        return plot, None
+
     return None, None
 
 
@@ -419,6 +425,129 @@ def _flatten_sum(expr: sp.Basic) -> tuple[list[tuple[sp.Symbol, int]], sp.Basic]
 # ---------------------------------------------------------------------------
 # Helpers used only by `_sample_for`
 # ---------------------------------------------------------------------------
+
+
+def _sample_schrodinger_free_density(
+    expr: sp.Basic,
+    *,
+    x_sym: sp.Symbol,
+    t_sym: sp.Symbol,
+    x_range: tuple[float, float] = (-6.0, 6.0),
+    t_range: tuple[float, float] = (0.05, 2.0),
+    n_grid: tuple[int, int] = (60, 40),
+    quad_limit: float = 30.0,
+) -> dict:
+    """Render the probability density ``|ψ(x, t)|²`` for free Schrödinger.
+
+    Two cases:
+
+    - **Closed-form** ψ (SymPy evaluated the complex Gaussian
+      convolution): lambdify, square modulus on the numpy side.
+    - **Unevaluated integral**: numerically convolve via scipy ``quad``,
+      separately for the real and imaginary parts of the integrand.
+
+    Defaults: ``ℏ = m = 1``, density window ``[-6, 6]`` and ``t ∈ [0.05,
+    2.0]`` to show wave-packet spreading over a couple of natural time
+    scales (with ``ψ_0 = exp(-x²)`` the natural width doubles around
+    ``t ≈ 1``).
+    """
+    import numpy as np
+
+    hbar = sp.Symbol("hbar", positive=True)
+    m_sym = sp.Symbol("m", positive=True)
+    param_subs = {hbar: 1.0, m_sym: 1.0}
+
+    expr_concrete = expr.subs(param_subs)
+
+    xs = np.linspace(*x_range, n_grid[0])
+    ts = np.linspace(*t_range, n_grid[1])
+
+    if not expr_concrete.has(sp.Integral):
+        # Closed-form complex ψ. lambdify with scipy/numpy so that
+        # sqrt of negative arguments returns the principal complex
+        # branch.
+        free = expr_concrete.free_symbols
+        bound_args = tuple(s for s in (x_sym, t_sym) if s in free)
+        if not bound_args:
+            psi = np.full((len(ts), len(xs)), complex(expr_concrete))
+            U = np.abs(psi) ** 2
+            return {
+                "kind": "surface_xt",
+                "x": xs.tolist(),
+                "t": ts.tolist(),
+                "u": U.tolist(),
+            }
+        f = sp.lambdify(bound_args, expr_concrete, modules=["scipy", "numpy"])
+        X, Tt = np.meshgrid(xs, ts, indexing="xy")
+        if bound_args == (x_sym, t_sym):
+            psi = np.asarray(f(X, Tt), dtype=complex)
+        elif bound_args == (x_sym,):
+            psi = np.asarray(f(X), dtype=complex)
+        elif bound_args == (t_sym,):
+            psi = np.asarray(f(Tt), dtype=complex)
+        else:
+            psi = np.full_like(X, complex(expr_concrete))
+        U = np.abs(psi) ** 2
+        return {
+            "kind": "surface_xt",
+            "x": xs.tolist(),
+            "t": ts.tolist(),
+            "u": U.tolist(),
+        }
+
+    # Unevaluated integral case: numerically compute ψ as
+    # prefactor(t) · ∫ kernel(x, t, y) ψ_0(y) dy.
+    integral = None
+    for arg in sp.preorder_traversal(expr_concrete):
+        if isinstance(arg, sp.Integral):
+            integral = arg
+            break
+    if integral is None:
+        return {
+            "kind": "surface_xt",
+            "x": xs.tolist(),
+            "t": ts.tolist(),
+            "u": [[0.0] * len(xs) for _ in ts],
+        }
+
+    prefactor = sp.simplify(expr_concrete / integral)
+    integrand = integral.function
+    y_var = integral.limits[0][0]
+
+    pre = sp.lambdify((t_sym,), prefactor, modules=["scipy", "numpy"])
+    g_re = sp.lambdify(
+        (x_sym, t_sym, y_var), sp.re(integrand), modules=["scipy", "numpy"]
+    )
+    g_im = sp.lambdify(
+        (x_sym, t_sym, y_var), sp.im(integrand), modules=["scipy", "numpy"]
+    )
+
+    from scipy.integrate import quad
+
+    U = np.zeros((len(ts), len(xs)), dtype=float)
+    for i, tv in enumerate(ts):
+        pref = complex(pre(tv))
+        for j, xv in enumerate(xs):
+            re_val, _ = quad(
+                lambda yv: g_re(xv, tv, yv),
+                -quad_limit,
+                quad_limit,
+                limit=80,
+            )
+            im_val, _ = quad(
+                lambda yv: g_im(xv, tv, yv),
+                -quad_limit,
+                quad_limit,
+                limit=80,
+            )
+            psi_val = pref * complex(re_val, im_val)
+            U[i, j] = abs(psi_val) ** 2
+    return {
+        "kind": "surface_xt",
+        "x": xs.tolist(),
+        "t": ts.tolist(),
+        "u": U.tolist(),
+    }
 
 
 def _sample_fourier_heat_line(
