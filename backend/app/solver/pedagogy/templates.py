@@ -1668,3 +1668,130 @@ def T_oscillator_physical_interpretation() -> str:
         "mínimo. Conecta el mundo cuántico con el clásico — los "
         "**estados de luz coherente** del láser son su análogo en QED."
     )
+
+
+# ===========================================================================
+# FOURIER TRANSFORM — heat equation on the real line
+# ===========================================================================
+
+def T_statement_heat_line() -> str:
+    return (
+        "Resolvemos la **ecuación del calor en una varilla infinita**:\n\n"
+        "$$u_t = \\alpha^2\\, u_{xx}, \\quad x \\in \\mathbb{R},\\ t > 0,\\qquad "
+        "u(x, 0) = f(x).$$\n\n"
+        "A diferencia del problema en la barra de longitud $L$, aquí no "
+        "hay fronteras — la varilla se extiende a todo $\\mathbb{R}$. "
+        "Esto cambia el método: sin condiciones de Dirichlet en los "
+        "extremos, no hay un problema de Sturm-Liouville que produzca "
+        "autovalores discretos. La herramienta natural es la "
+        "**transformada de Fourier**, que diagonaliza $\\partial_x$ y "
+        "convierte la EDP en una EDO en el dominio de frecuencias."
+    )
+
+
+def T_heat_line_method_choice() -> str:
+    return (
+        "**Por qué Fourier y no separación.** La separación de variables "
+        "funciona cuando las condiciones de contorno producen un problema "
+        "de autovalores con espectro discreto (Sturm-Liouville en un "
+        "intervalo finito). Aquí el dominio es infinito y no hay BCs, "
+        "así que el espectro es **continuo**: en lugar de una serie "
+        "$\\sum_n B_n \\sin(n\\pi x/L)$ aparecerá una integral "
+        "$\\int_{-\\infty}^{\\infty} \\hat f(k)\\, e^{ikx}\\, dk$.\n\n"
+        "La transformada de Fourier es la generalización limpia de la "
+        "serie de Fourier al caso no acotado. Cumple además dos "
+        "propiedades clave que vamos a explotar:\n\n"
+        "1. **Diagonaliza $\\partial_x$**: $\\mathcal{F}[u_x] = ik\\, \\mathcal{F}[u]$, "
+        "$\\mathcal{F}[u_{xx}] = -k^2\\, \\mathcal{F}[u]$. La EDP en "
+        "$x$ se vuelve **multiplicación por $-k^2$**.\n"
+        "2. **Conmuta con derivadas en $t$**: $\\mathcal{F}[u_t] = "
+        "\\partial_t \\mathcal{F}[u]$.\n\n"
+        "Combinadas, transformar la EDP la reduce a una EDO de primer "
+        "orden en $t$ para cada modo $k$."
+    )
+
+
+def T_heat_line_pde_to_ode() -> str:
+    return (
+        "Aplicamos $\\mathcal{F}$ a ambos lados de $u_t = \\alpha^2 u_{xx}$. "
+        "Denotamos $\\hat u(k, t) = \\mathcal{F}[u(\\cdot, t)](k) = "
+        "\\int_{-\\infty}^{\\infty} u(x, t)\\, e^{-ikx}\\, dx$:\n\n"
+        "$$\\partial_t \\hat u(k, t) = \\alpha^2\\, (ik)^2\\, \\hat u(k, t) = "
+        "-\\alpha^2 k^2\\, \\hat u(k, t).$$\n\n"
+        "**Lo importante.** Para cada $k$ fijo, esto es una EDO lineal "
+        "de primer orden en $t$ con coeficiente constante $-\\alpha^2 k^2$ "
+        "(negativo — clave para el decaimiento). El problema espacial-"
+        "temporal ha pasado de ser una EDP a un **continuo de EDOs "
+        "desacopladas**, una por cada frecuencia $k$."
+    )
+
+
+def T_heat_line_solve_ode() -> str:
+    return (
+        "La EDO temporal en cada $k$ se resuelve directamente:\n\n"
+        "$$\\hat u(k, t) = \\hat u(k, 0)\\, e^{-\\alpha^2 k^2 t} = "
+        "\\hat f(k)\\, e^{-\\alpha^2 k^2 t}.$$\n\n"
+        "Las **altas frecuencias decaen más rápido** ($e^{-\\alpha^2 k^2 t}$ "
+        "cae cuadráticamente en $k$), lo que es el origen matemático del "
+        "**efecto suavizante** del calor: cualquier irregularidad del "
+        "dato inicial se borra en tiempo positivo."
+    )
+
+
+def T_heat_line_inverse() -> str:
+    return (
+        "Para recuperar $u(x, t)$ tomamos la transformada inversa. "
+        "Reconocemos que **multiplicar dos transformadas equivale a "
+        "convolucionar las funciones originales** "
+        "($\\mathcal{F}[f * g] = \\hat f\\, \\hat g$). En nuestro caso\n\n"
+        "$$\\hat u(k, t) = \\hat f(k)\\, \\hat G(k, t),\\qquad "
+        "\\hat G(k, t) = e^{-\\alpha^2 k^2 t},$$\n\n"
+        "así que $u(x, t) = (f * G)(x, t)$ donde $G$ es la **función "
+        "fundamental** (heat kernel), determinada por su transformada "
+        "$\\hat G$. Calculando la inversa de una gaussiana en $k$ (que "
+        "es otra gaussiana en $x$):\n\n"
+        "$$\\boxed{\\;G(x, t) = \\frac{1}{\\sqrt{4\\pi \\alpha^2 t}}\\, "
+        "\\exp\\!\\left(-\\frac{x^2}{4\\alpha^2 t}\\right).\\;}$$"
+    )
+
+
+def T_heat_line_final_formula() -> str:
+    return (
+        "La solución cerrada es la convolución del dato inicial con el "
+        "**núcleo de Gauss**:\n\n"
+        "$$\\boxed{\\;u(x, t) = \\frac{1}{\\sqrt{4\\pi \\alpha^2 t}}\\, "
+        "\\int_{-\\infty}^{\\infty} \\exp\\!\\left(-\\frac{(x - y)^2}{4\\alpha^2 t}\\right) "
+        "f(y)\\, dy.\\;}$$\n\n"
+        "Esta es la **fórmula de Poisson para el calor**: el análogo "
+        "exacto, en el contexto del calor 1D infinito, de la fórmula "
+        "de D'Alembert para la onda. Lo que en D'Alembert era "
+        "evaluación en dos puntos $(f(x-ct) + f(x+ct))/2$, aquí es un "
+        "promedio gaussiano con anchura $\\sigma(t) = \\sqrt{2\\alpha^2 t}$ "
+        "que **crece** con el tiempo."
+    )
+
+
+def T_heat_line_physical_interpretation() -> str:
+    return (
+        "Cuatro lecturas físicas que el núcleo gaussiano explicita:\n\n"
+        "- **Velocidad infinita de propagación.** Para todo $t > 0$, "
+        "$G(x, t) > 0$ en todo $x$. Un dato inicial concentrado en "
+        "$y = 0$ \"se siente\" instantáneamente en cualquier $x$, aunque "
+        "con peso exponencialmente pequeño. Esto es un **defecto "
+        "modelístico** del calor (contradice la relatividad), pero es "
+        "una consecuencia inevitable de la ecuación parabólica.\n"
+        "- **Suavizado instantáneo.** Para cualquier $t > 0$, $u(x, t)$ "
+        "es de clase $C^\\infty$, sin importar la regularidad de $f$. "
+        "Una condición inicial **discontinua** (p. ej. escalón) "
+        "produce una solución analítica en $t > 0$. Contrastar con la "
+        "onda, donde las discontinuidades viajan sin suavizarse.\n"
+        "- **Autosimilaridad.** $G(x, t)$ es invariante bajo el "
+        "reescalado $(x, t) \\mapsto (\\lambda x, \\lambda^2 t)$: la "
+        "anchura crece como $\\sqrt{t}$, no como $t$. Esta ley raíz-de-$t$ "
+        "es la firma del fenómeno difusivo y aparece en física "
+        "estadística (movimiento browniano), química (difusión "
+        "molecular), y finanzas (volatilidad).\n"
+        "- **Decaimiento al equilibrio.** Si $f$ es integrable, "
+        "$u(x, t) \\to 0$ uniformemente cuando $t \\to \\infty$ (todo "
+        "el calor inicial se ha esparcido al infinito)."
+    )

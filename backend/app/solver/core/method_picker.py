@@ -57,14 +57,28 @@ def _all_dirichlet_zero(p: PDEProblem) -> bool:
 
 def _looks_like_heat_1d(p: PDEProblem) -> bool:
     if p.equation_kind == "heat":
-        return _has_1d_interval_domain(p) and _all_dirichlet_zero(p)
+        return (
+            _has_1d_interval_domain(p)
+            and not _is_unbounded_x(p)
+            and _all_dirichlet_zero(p)
+        )
     latex = p.equation_latex.replace(" ", "").lower()
     heat_shapes = ("u_t=alpha^2*u_{xx}", "u_t=alpha^2u_{xx}", "u_t=a^2u_{xx}")
     return (
         any(s in latex for s in heat_shapes)
         and _has_1d_interval_domain(p)
+        and not _is_unbounded_x(p)
         and _all_dirichlet_zero(p)
     )
+
+
+def _looks_like_heat_1d_unbounded(p: PDEProblem) -> bool:
+    """Heat equation on the real line — Fourier transform / Gaussian kernel."""
+    if p.equation_kind == "heat":
+        return _is_unbounded_x(p)
+    latex = p.equation_latex.replace(" ", "").lower()
+    heat_shapes = ("u_t=alpha^2*u_{xx}", "u_t=alpha^2u_{xx}", "u_t=a^2u_{xx}")
+    return any(s in latex for s in heat_shapes) and _is_unbounded_x(p)
 
 
 def _looks_like_wave_1d_bounded(p: PDEProblem) -> bool:
@@ -332,6 +346,30 @@ def _choice_wave_1d_sov(_p: PDEProblem | None = None) -> MethodChoice:
             "extensiones periódicas impares, en el intervalo $[0, L]$. "
             "La equivalencia entre ambas vistas es uno de los hechos "
             "más instructivos del estudio de ondas."
+        ),
+    )
+
+
+def _choice_fourier_heat_line(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="fourier_heat_line",
+        rationale_md=(
+            "El dominio espacial es la **recta entera** $\\mathbb{R}$, "
+            "sin condiciones de contorno. Sin BCs no hay un problema de "
+            "Sturm-Liouville que produzca autovalores discretos, así que "
+            "**separación de variables clásica no aplica**. La herramienta "
+            "natural es la **transformada de Fourier en $x$**, que "
+            "diagonaliza $\\partial_x$ y reduce la EDP a una EDO desacoplada "
+            "para cada modo $k$. La inversión devuelve la solución como "
+            "convolución del dato inicial con el **núcleo de Gauss**."
+        ),
+        alternatives_md=(
+            "*Funciones de Green* daría exactamente la misma fórmula "
+            "(el núcleo $G$ es la función de Green del calor en la línea, "
+            "con condición inicial $G(x, 0) = \\delta(x)$). *Transformada "
+            "de Laplace en $t$* es otra ruta clásica, especialmente útil "
+            "si hay fuentes dependientes del tiempo. *Separación de "
+            "variables* no aplica directamente (dominio no acotado)."
         ),
     )
 
@@ -633,6 +671,7 @@ _REGISTRY: list[tuple[Callable[[PDEProblem], bool], Callable[[PDEProblem | None]
     (_looks_like_wave_disk, _choice_wave_disk),
     (_looks_like_heat_disk, _choice_heat_disk),
     (_looks_like_laplace_ball, _choice_laplace_ball),
+    (_looks_like_heat_1d_unbounded, _choice_fourier_heat_line),
     (_looks_like_heat_1d, _choice_heat_1d_sov),
     (_looks_like_wave_1d_unbounded, _choice_dalembert),
     (_looks_like_wave_1d_bounded, _choice_wave_1d_sov),
@@ -650,10 +689,11 @@ def pick_method(problem: PDEProblem) -> MethodChoice:
             return builder(problem)
     raise NotImplementedError(
         "Ningún método del repertorio actual cubre este problema. "
-        "Repertorio (Fase 1 + 2-A + 2-B + 2-C + 2-D): calor 1D y en disco, "
-        "onda 1D (SOV y D'Alembert) y en disco (tambor), Laplace en "
-        "rectángulo, disco, bola y semiplano, Poisson 1D (Green), "
-        "Helmholtz en rectángulo, telégrafo, Schrödinger en pozo infinito, "
+        "Repertorio (Fase 1 + 2-A + 2-B + 2-C + 2-D): calor 1D (SOV "
+        "y Fourier en la línea) y en disco, onda 1D (SOV y D'Alembert) "
+        "y en disco (tambor), Laplace en rectángulo, disco, bola y "
+        "semiplano, Poisson 1D (Green), Helmholtz en rectángulo, "
+        "telégrafo, Schrödinger en pozo infinito y oscilador armónico, "
         "transporte 1D por características, biarmónica/viga 1D."
     )
 

@@ -39,6 +39,7 @@ independientemente del modo de entrada.
 | EDP | Dominio | Método | Slug |
 |---|---|---|---|
 | Calor `u_t = α² u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `separation_of_variables` |
+| Calor `u_t = α² u_xx` | `x ∈ ℝ` | Transformada de Fourier / núcleo de Gauss | `fourier_heat_line` |
 | Calor `u_t = α²(u_rr + u_r/r)` | disco `r < R` axisimétrico | Bessel-Fourier | `sov_heat_disk` |
 | Onda `u_tt = c² u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `sov_wave_1d` |
 | Onda `u_tt = c² u_xx` | `x ∈ ℝ` | Fórmula de D'Alembert | `dalembert_wave_1d` |
@@ -55,7 +56,7 @@ independientemente del modo de entrada.
 | Transporte `u_t + c·u_x = 0` | `x ∈ ℝ` | Características | `characteristics_transport_1d` |
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 
-**157 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
+**169 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
 visualización**: superficies en `(x, t)` o `(x, y)`, gráficos 1D, o
 cortes meridionales según la geometría.
 

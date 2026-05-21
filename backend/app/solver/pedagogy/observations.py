@@ -500,6 +500,67 @@ _REGISTRY: dict[str, DidacticObservation] = {
             "función de onda."
         ),
     ),
+    # ---- Fourier transform on the line -----------------------------------
+    "fourier_transform_diagonalizes_pde": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**La transformada de Fourier diagonaliza $\\partial_x$.** "
+            "Bajo $\\mathcal{F}$, la derivada espacial $\\partial_x$ se "
+            "convierte en multiplicación por $ik$, y $\\partial_x^2$ en "
+            "multiplicación por $-k^2$. Así, una EDP con coeficientes "
+            "constantes se vuelve una **EDO en $t$** parametrizada por "
+            "$k$. Es el análogo continuo de la separación de variables: "
+            "los modos $e^{ikx}$ son las autofunciones del operador "
+            "$\\partial_x$ sobre $L^2(\\mathbb{R})$, con espectro **continuo** "
+            "$k \\in \\mathbb{R}$ en lugar del espectro discreto "
+            "$\\{n\\pi/L\\}$ del intervalo acotado."
+        ),
+    ),
+    "heat_kernel_self_similar": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**El núcleo del calor es auto-similar.** "
+            "$G(x, t) = \\frac{1}{\\sqrt{4\\pi \\alpha^2 t}}\\,"
+            "e^{-x^2/(4\\alpha^2 t)}$ tiene la simetría "
+            "$G(\\lambda x, \\lambda^2 t) = \\lambda^{-1} G(x, t)$: si "
+            "reescalas el espacio por $\\lambda$ y el tiempo por "
+            "$\\lambda^2$, recuperas el mismo perfil (salvo amplitud). "
+            "Esto fija la ley de escala del problema: el ancho "
+            "característico crece como $\\sqrt{t}$, no como $t$. La "
+            "difusión es **subbalística**: una partícula browniana "
+            "recorre una distancia $\\sim \\sqrt{t}$, no $\\sim t$ "
+            "(que sería el movimiento balístico de la onda)."
+        ),
+    ),
+    "heat_infinite_speed": DidacticObservation(
+        kind="pitfall",
+        text_md=(
+            "**Velocidad infinita de propagación.** "
+            "Aunque $f$ tenga soporte compacto (digamos, cero fuera de "
+            "$[-1, 1]$), para **cualquier** $t > 0$ y **cualquier** $x$ "
+            "la integral de convolución da un valor estrictamente "
+            "positivo. Esto significa que la ecuación del calor "
+            "propaga **instantáneamente** información a distancia "
+            "infinita — una limitación bien conocida del modelo de "
+            "difusión clásico, físicamente irreal pero útil porque "
+            "los valores lejanos son exponencialmente pequeños. "
+            "Contrasta con la ecuación de onda y d'Alembert, donde la "
+            "información viaja como mucho a velocidad $c$ (cono de luz)."
+        ),
+    ),
+    "gaussian_smoothing": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Suavizado instantáneo.** Aunque $f$ tenga discontinuidades "
+            "o esquinas, la convolución con la gaussiana "
+            "$G(\\cdot, t)$ es $C^\\infty$ para todo $t > 0$. El operador "
+            "del calor regulariza el dato inicial inmediatamente: las "
+            "frecuencias altas $|k| \\to \\infty$ son atenuadas por "
+            "$e^{-\\alpha^2 k^2 t}$, una caída super-exponencial. Esta "
+            "irreversibilidad (no se puede \"des-suavizar\") refleja la "
+            "asimetría temporal del problema: la entropía aumenta."
+        ),
+    ),
 }
 
 

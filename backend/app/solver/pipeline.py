@@ -15,6 +15,7 @@ from app.solver.core.method_picker import pick_method
 from app.solver.methods.biharmonic_beam import BiharmonicBeam
 from app.solver.methods.characteristics import CharacteristicsTransport1D
 from app.solver.methods.dalembert import DAlembertWave1D
+from app.solver.methods.fourier_heat_line import FourierHeatLine
 from app.solver.methods.green_1d import GreensFunction1D
 from app.solver.methods.images_halfplane import ImagesHalfPlane
 from app.solver.methods.schrodinger_oscillator import SchrodingerHarmonicOscillator
@@ -44,6 +45,7 @@ _METHODS = {
     "separation_of_variables": SeparationOfVariablesHeat1D(),
     "sov_wave_1d": SeparationOfVariablesWave1D(),
     "dalembert_wave_1d": DAlembertWave1D(),
+    "fourier_heat_line": FourierHeatLine(),
     "sov_laplace_rect": SeparationOfVariablesLaplaceRect(),
     "sov_laplace_disk": SeparationOfVariablesLaplaceDisk(),
     "greens_function_1d": GreensFunction1D(),
@@ -133,6 +135,16 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
             var1_range=(0.0, 1.0), var2_eval=0.0,
         )
         return plot, conv
+
+    if slug == "fourier_heat_line":
+        alpha = sp.Symbol("alpha", positive=True)
+        plot = _sample_fourier_heat_line(
+            expr,
+            x_sym=x,
+            t_sym=t,
+            parameter_values={alpha: 1.0},
+        )
+        return plot, None
 
     if slug == "dalembert_wave_1d":
         c = sp.Symbol("c", positive=True)
@@ -407,6 +419,108 @@ def _flatten_sum(expr: sp.Basic) -> tuple[list[tuple[sp.Symbol, int]], sp.Basic]
 # ---------------------------------------------------------------------------
 # Helpers used only by `_sample_for`
 # ---------------------------------------------------------------------------
+
+
+def _sample_fourier_heat_line(
+    expr: sp.Basic,
+    *,
+    x_sym: sp.Symbol,
+    t_sym: sp.Symbol,
+    parameter_values: dict[sp.Symbol, float],
+    x_range: tuple[float, float] = (-4.0, 4.0),
+    t_range: tuple[float, float] = (0.02, 1.5),
+    n_grid: tuple[int, int] = (60, 40),
+    quad_limit: float = 30.0,
+) -> dict:
+    """Render ``u(x, t)`` for the heat equation on the real line.
+
+    The solver may emit two shapes:
+
+    - **Closed form** (when SymPy evaluated the convolution integral —
+      e.g., for Gaussian or polynomial × Gaussian initial conditions):
+      lambdify directly.
+    - **Unevaluated** ``sp.Integral``: lambdify the integrand over
+      ``(x, t, y)`` and run scipy ``quad`` for each grid point.
+
+    We start ``t`` slightly above zero to avoid the singular factor
+    ``1/√(4π α² t)`` at exactly ``t = 0``.
+    """
+    import numpy as np
+
+    xs = np.linspace(*x_range, n_grid[0])
+    ts = np.linspace(*t_range, n_grid[1])
+
+    expr_concrete = expr.subs(parameter_values)
+
+    if not expr_concrete.has(sp.Integral):
+        free = expr_concrete.free_symbols
+        bound_args = tuple(s for s in (x_sym, t_sym) if s in free)
+        if not bound_args:
+            U = np.full((len(ts), len(xs)), float(expr_concrete))
+            return {
+                "kind": "surface_xt",
+                "x": xs.tolist(),
+                "t": ts.tolist(),
+                "u": U.tolist(),
+            }
+        f = sp.lambdify(bound_args, expr_concrete, modules=["scipy", "numpy"])
+        X, Tt = np.meshgrid(xs, ts, indexing="xy")
+        if bound_args == (x_sym, t_sym):
+            U = np.asarray(f(X, Tt), dtype=float)
+        elif bound_args == (x_sym,):
+            U = np.asarray(f(X), dtype=float)
+        elif bound_args == (t_sym,):
+            U = np.asarray(f(Tt), dtype=float)
+        else:
+            U = np.full_like(X, float(expr_concrete))
+        return {
+            "kind": "surface_xt",
+            "x": xs.tolist(),
+            "t": ts.tolist(),
+            "u": U.tolist(),
+        }
+
+    # Unevaluated integral: convolve numerically. We strip the prefactor
+    # and integration explicitly to lambdify a clean (x, t, y) callable.
+    integral = None
+    for arg in sp.preorder_traversal(expr_concrete):
+        if isinstance(arg, sp.Integral):
+            integral = arg
+            break
+    if integral is None:
+        return {
+            "kind": "surface_xt",
+            "x": xs.tolist(),
+            "t": ts.tolist(),
+            "u": [[0.0] * len(xs) for _ in ts],
+        }
+
+    prefactor = sp.simplify(expr_concrete / integral)
+    integrand = integral.function
+    y_var = integral.limits[0][0]
+
+    pre = sp.lambdify((t_sym,), prefactor, modules=["scipy", "numpy"])
+    g = sp.lambdify((x_sym, t_sym, y_var), integrand, modules=["scipy", "numpy"])
+
+    from scipy.integrate import quad
+
+    U = np.zeros((len(ts), len(xs)), dtype=float)
+    for i, tv in enumerate(ts):
+        pref_val = float(pre(tv))
+        for j, xv in enumerate(xs):
+            val, _err = quad(
+                lambda yv: g(xv, tv, yv),
+                -quad_limit,
+                quad_limit,
+                limit=80,
+            )
+            U[i, j] = pref_val * val
+    return {
+        "kind": "surface_xt",
+        "x": xs.tolist(),
+        "t": ts.tolist(),
+        "u": U.tolist(),
+    }
 
 
 def _sample_beam_line(
