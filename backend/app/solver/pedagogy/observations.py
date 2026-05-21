@@ -548,6 +548,64 @@ _REGISTRY: dict[str, DidacticObservation] = {
             "información viaja como mucho a velocidad $c$ (cono de luz)."
         ),
     ),
+    "laplace_diagonalizes_dt": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**La transformada de Laplace diagonaliza $\\partial_t$.** "
+            "Bajo $\\mathcal{L}$, la derivada temporal se convierte en "
+            "multiplicación por $s$ menos el dato inicial: "
+            "$\\mathcal{L}[u_t] = s\\, U - u(\\cdot, 0)$. Es el "
+            "análogo de la propiedad de Fourier $\\mathcal{F}[u_x] = "
+            "ik\\, \\hat u$, pero con dos diferencias prácticas "
+            "cruciales: (1) **la condición inicial entra automáticamente** "
+            "en la transformada (no hay que añadirla por separado), y "
+            "(2) está pensada para tiempos $t \\ge 0$, no para "
+            "$t \\in \\mathbb{R}$. Esto la hace la herramienta natural "
+            "para problemas de valor inicial."
+        ),
+    ),
+    "diffusion_length_sqrt_t": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Longitud de difusión $\\delta(t) = 2\\alpha\\sqrt{t}$.** "
+            "Es la profundidad típica hasta la que el calor (o la "
+            "concentración, o cualquier cantidad difusiva) penetra en "
+            "tiempo $t$. Aparece en problemas tan distintos como el "
+            "templado de aceros (¿cuánto tarda en enfriarse el centro?), "
+            "el espesor de la capa límite térmica en aerodinámica, o el "
+            "ancho de una interfase de electrodepósito. La regla "
+            "$\\delta \\propto \\sqrt{t}$ es **universal** para "
+            "fenómenos puramente difusivos."
+        ),
+    ),
+    "erfc_inverse_laplace_pair": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**El par clave: $\\mathcal{L}^{-1}[s^{-1} e^{-a\\sqrt{s}}] = "
+            "\\operatorname{erfc}(a/(2\\sqrt{t}))$.** Aparece en "
+            "cualquier problema de calor o difusión sobre un dominio "
+            "semi-infinito con condición de Dirichlet constante. La "
+            "demostración pasa por la fórmula de inversión de "
+            "Bromwich, pero para el aula la receta es: **memorizar el "
+            "par y aplicarlo**. Si el dato es $f(t)$ en lugar de "
+            "constante, se usa la integral de Duhamel "
+            "$u(x, t) = \\int_0^t \\partial_t G(x, t-\\tau) f(\\tau)\\, d\\tau$ "
+            "con $G$ esta misma solución."
+        ),
+    ),
+    "self_similar_diffusion_eta": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**La variable de similaridad $\\eta = x/(2\\alpha\\sqrt{t})$.** "
+            "Aparece **antes** de transformar (puede usarse directamente "
+            "para reducir la EDP a una EDO en $\\eta$, sin pasar por "
+            "Laplace) y es la pista de que el problema es "
+            "**auto-similar**: invariante bajo el reescalado "
+            "$(x, t) \\mapsto (\\lambda x, \\lambda^2 t)$. Cualquier "
+            "EDP difusiva sin escala intrínseca de longitud (sin BCs "
+            "que fijen un tamaño) tendrá esta estructura."
+        ),
+    ),
     "wick_rotation_heat_to_schrodinger": DidacticObservation(
         kind="theorem",
         text_md=(

@@ -17,6 +17,7 @@ from app.solver.methods.characteristics import CharacteristicsTransport1D
 from app.solver.methods.dalembert import DAlembertWave1D
 from app.solver.methods.fourier_heat_line import FourierHeatLine
 from app.solver.methods.green_1d import GreensFunction1D
+from app.solver.methods.laplace_heat_halfline import LaplaceHeatHalfLine
 from app.solver.methods.images_halfplane import ImagesHalfPlane
 from app.solver.methods.schrodinger_free import SchrodingerFreeLine
 from app.solver.methods.schrodinger_oscillator import SchrodingerHarmonicOscillator
@@ -47,6 +48,7 @@ _METHODS = {
     "sov_wave_1d": SeparationOfVariablesWave1D(),
     "dalembert_wave_1d": DAlembertWave1D(),
     "fourier_heat_line": FourierHeatLine(),
+    "laplace_heat_halfline": LaplaceHeatHalfLine(),
     "sov_laplace_rect": SeparationOfVariablesLaplaceRect(),
     "sov_laplace_disk": SeparationOfVariablesLaplaceDisk(),
     "greens_function_1d": GreensFunction1D(),
@@ -137,6 +139,13 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
             var1_range=(0.0, 1.0), var2_eval=0.0,
         )
         return plot, conv
+
+    if slug == "laplace_heat_halfline":
+        # Closed form involves `erfc`, which lives in scipy, not numpy —
+        # so we can't use the generic `sample_2d` here (it pins
+        # `modules="numpy"`). Inline sampler with scipy+numpy modules.
+        plot = _sample_laplace_heat_halfline(expr)
+        return plot, None
 
     if slug == "fourier_heat_line":
         alpha = sp.Symbol("alpha", positive=True)
@@ -425,6 +434,42 @@ def _flatten_sum(expr: sp.Basic) -> tuple[list[tuple[sp.Symbol, int]], sp.Basic]
 # ---------------------------------------------------------------------------
 # Helpers used only by `_sample_for`
 # ---------------------------------------------------------------------------
+
+
+def _sample_laplace_heat_halfline(
+    expr: sp.Basic,
+    *,
+    x_range: tuple[float, float] = (0.0, 4.0),
+    t_range: tuple[float, float] = (0.02, 1.5),
+    n_grid: tuple[int, int] = (60, 40),
+) -> dict:
+    """Sample u(x, t) = h · erfc(x/(2 α √t)) on a Cartesian grid.
+
+    Standalone because ``sample_2d`` pins lambdify to ``modules="numpy"``
+    and ``erfc`` lives in ``scipy.special``. We default any free
+    parameter (typically α and h) to 1.0.
+    """
+    import numpy as np
+
+    x_nn = sp.Symbol("x", real=True, nonnegative=True)
+    t_nn = sp.Symbol("t", real=True, nonnegative=True)
+    param_syms = sorted(
+        (s for s in expr.free_symbols if s.name not in {"x", "t"}),
+        key=lambda s: s.name,
+    )
+    f = sp.lambdify(
+        (x_nn, t_nn, *param_syms), expr, modules=["scipy", "numpy"]
+    )
+    xs = np.linspace(*x_range, n_grid[0])
+    ts = np.linspace(*t_range, n_grid[1])
+    X, Tt = np.meshgrid(xs, ts, indexing="xy")
+    U = np.asarray(f(X, Tt, *(1.0 for _ in param_syms)), dtype=float)
+    return {
+        "kind": "surface_xt",
+        "x": xs.tolist(),
+        "t": ts.tolist(),
+        "u": U.tolist(),
+    }
 
 
 def _sample_schrodinger_free_density(

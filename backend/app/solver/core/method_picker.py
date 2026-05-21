@@ -81,6 +81,40 @@ def _looks_like_heat_1d_unbounded(p: PDEProblem) -> bool:
     return any(s in latex for s in heat_shapes) and _is_unbounded_x(p)
 
 
+def _is_semi_infinite_x_nonneg(p: PDEProblem) -> bool:
+    """x ∈ [0, ∞): lower bound is zero, upper bound is +∞."""
+    if p.domain.x is None:
+        return False
+    lo, hi = (s.strip().lower() for s in p.domain.x)
+    return lo == "0" and hi in {"infty", "inf", "oo"}
+
+
+def _has_dirichlet_at_x0(p: PDEProblem) -> bool:
+    for bc in p.boundary_conditions:
+        where = bc.where.replace(" ", "").lower()
+        if bc.type == "dirichlet" and where in {"x=0", "0"}:
+            return True
+    return False
+
+
+def _looks_like_heat_halfline(p: PDEProblem) -> bool:
+    """Heat on x ∈ [0, ∞) with prescribed temperature at the wall — Laplace in t."""
+    if p.equation_kind == "heat":
+        return (
+            _is_semi_infinite_x_nonneg(p)
+            and p.domain.y is None
+            and _has_dirichlet_at_x0(p)
+        )
+    latex = p.equation_latex.replace(" ", "").lower()
+    heat_shapes = ("u_t=alpha^2*u_{xx}", "u_t=alpha^2u_{xx}", "u_t=a^2u_{xx}")
+    return (
+        any(s in latex for s in heat_shapes)
+        and _is_semi_infinite_x_nonneg(p)
+        and p.domain.y is None
+        and _has_dirichlet_at_x0(p)
+    )
+
+
 def _looks_like_wave_1d_bounded(p: PDEProblem) -> bool:
     if p.equation_kind == "wave":
         return _has_1d_interval_domain(p) and not _is_unbounded_x(p) and _all_dirichlet_zero(p)
@@ -373,6 +407,36 @@ def _choice_wave_1d_sov(_p: PDEProblem | None = None) -> MethodChoice:
             "extensiones periódicas impares, en el intervalo $[0, L]$. "
             "La equivalencia entre ambas vistas es uno de los hechos "
             "más instructivos del estudio de ondas."
+        ),
+    )
+
+
+def _choice_laplace_heat_halfline(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="laplace_heat_halfline",
+        rationale_md=(
+            "El dominio espacial es **semi-infinito** $x \\in [0, \\infty)$, "
+            "con una condición de **Dirichlet en la pared** $x = 0$ y "
+            "decaimiento al infinito. Como el dato no homogéneo vive en "
+            "el tiempo (la temperatura del extremo), y la condición "
+            "inicial es nula en $x$, la **transformada de Laplace en "
+            "$t$** es la herramienta natural: incorpora la CI "
+            "automáticamente ($\\mathcal{L}[u_t] = sU - u(x,0)$) y "
+            "convierte la EDP en una EDO lineal de segundo orden en "
+            "$x$, que se invierte usando el par $\\mathcal{L}^{-1}[s^{-1} "
+            "e^{-a\\sqrt{s}}] = \\operatorname{erfc}(a/(2\\sqrt{t}))$."
+        ),
+        alternatives_md=(
+            "**Otras vías equivalentes.**\n\n"
+            "- **Método de imágenes:** extender la barra a la recta entera "
+            "con un dato impar — funciona si el dato fuera homogéneo en "
+            "$x = 0$, pero con $u(0, t) = h \\ne 0$ habría que restar la "
+            "constante primero. Menos directo.\n"
+            "- **Variable de similaridad** $\\eta = x/(2\\alpha\\sqrt{t})$: "
+            "transforma la EDP directamente en una EDO en $\\eta$. Es la "
+            "ruta más rápida si reconoces de antemano la autosimilaridad, "
+            "y produce **la misma fórmula**. Pedagógicamente Laplace "
+            "tiene la ventaja de no requerir esa intuición previa."
         ),
     )
 
@@ -730,6 +794,7 @@ _REGISTRY: list[tuple[Callable[[PDEProblem], bool], Callable[[PDEProblem | None]
     (_looks_like_wave_disk, _choice_wave_disk),
     (_looks_like_heat_disk, _choice_heat_disk),
     (_looks_like_laplace_ball, _choice_laplace_ball),
+    (_looks_like_heat_halfline, _choice_laplace_heat_halfline),
     (_looks_like_heat_1d_unbounded, _choice_fourier_heat_line),
     (_looks_like_heat_1d, _choice_heat_1d_sov),
     (_looks_like_wave_1d_unbounded, _choice_dalembert),
@@ -749,11 +814,12 @@ def pick_method(problem: PDEProblem) -> MethodChoice:
     raise NotImplementedError(
         "Ningún método del repertorio actual cubre este problema. "
         "Repertorio (Fase 1 + 2-A + 2-B + 2-C + 2-D): calor 1D (SOV "
-        "y Fourier en la línea) y en disco, onda 1D (SOV y D'Alembert) "
-        "y en disco (tambor), Laplace en rectángulo, disco, bola y "
-        "semiplano, Poisson 1D (Green), Helmholtz en rectángulo, "
-        "telégrafo, Schrödinger libre, en pozo infinito y oscilador "
-        "armónico, transporte 1D por características, biarmónica/viga 1D."
+        "acotado, Fourier en la línea, Laplace en el semieje) y en "
+        "disco, onda 1D (SOV y D'Alembert) y en disco (tambor), "
+        "Laplace en rectángulo, disco, bola y semiplano, Poisson 1D "
+        "(Green), Helmholtz en rectángulo, telégrafo, Schrödinger "
+        "libre, en pozo infinito y oscilador armónico, transporte 1D "
+        "por características, biarmónica/viga 1D."
     )
 
 

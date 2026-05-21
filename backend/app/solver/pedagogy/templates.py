@@ -1906,6 +1906,142 @@ def T_schrodinger_free_final_formula() -> str:
     )
 
 
+def T_statement_heat_halfline() -> str:
+    return (
+        "Resolvemos la **conducción del calor en una barra semi-infinita** "
+        "con temperatura prescrita en el extremo:\n\n"
+        "$$u_t = \\alpha^2\\, u_{xx},\\quad x > 0,\\ t > 0,\\qquad "
+        "u(x, 0) = 0,\\quad u(0, t) = h.$$\n\n"
+        "Es el modelo prototipo de **enfriamiento/calentamiento desde "
+        "una pared**: el dato físico vive en el **tiempo** (la temperatura "
+        "del extremo $x = 0$), no en el espacio. Ese cambio de "
+        "perspectiva sugiere transformar respecto a $t$ — no a $x$ "
+        "como en el problema en la recta entera."
+    )
+
+
+def T_heat_halfline_method_choice() -> str:
+    return (
+        "**Por qué transformada de Laplace y no Fourier.** Aquí el "
+        "dominio en $x$ es **semi-infinito** $[0, \\infty)$ y "
+        "tenemos un dato en $x = 0$ (no una condición de decaimiento "
+        "homogénea). Fourier en $x$ es incómoda — necesitaríamos "
+        "extender por reflexión, lo que mete imágenes. En cambio, el "
+        "dominio en $t$ es $[0, \\infty)$ con condición inicial "
+        "$u(x, 0) = 0$: exactamente lo que la **transformada de "
+        "Laplace** maneja con naturalidad.\n\n"
+        "Recordamos su definición y propiedades clave:\n\n"
+        "$$\\mathcal{L}[u](x, s) = U(x, s) = \\int_0^\\infty e^{-st}\\, u(x, t)\\, dt,$$\n\n"
+        "1. $\\mathcal{L}[u_t] = s\\, U(x, s) - u(x, 0)$ — la condición "
+        "inicial entra automáticamente.\n"
+        "2. $\\mathcal{L}[u_{xx}] = U_{xx}(x, s)$ — $\\partial_x$ "
+        "conmuta con $\\mathcal{L}$ (es transformada en $t$, no en $x$).\n"
+        "3. La transformada convierte un problema **evolutivo en $t$** "
+        "en una **EDO ordinaria en $x$** parametrizada por $s$."
+    )
+
+
+def T_heat_halfline_pde_to_ode() -> str:
+    return (
+        "Aplicamos $\\mathcal{L}$ a $u_t = \\alpha^2 u_{xx}$ usando "
+        "la propiedad 1 y la condición inicial $u(x, 0) = 0$:\n\n"
+        "$$s\\, U(x, s) - 0 = \\alpha^2\\, U_{xx}(x, s) "
+        "\\quad\\Longleftrightarrow\\quad "
+        "U_{xx} - \\frac{s}{\\alpha^2}\\, U = 0.$$\n\n"
+        "**Resultado clave.** Hemos pasado de una EDP en dos variables "
+        "$(x, t)$ a una **EDO de segundo orden en $x$** con coeficiente "
+        "constante (dependiente paramétricamente de $s$). Es el mismo "
+        "tipo de simplificación que la transformada de Fourier producía "
+        "para el calor en la recta, pero con $x$ y $t$ intercambiados."
+    )
+
+
+def T_heat_halfline_solve_ode() -> str:
+    return (
+        "La EDO $U_{xx} - (s/\\alpha^2)U = 0$ es **lineal de segundo "
+        "orden con coeficientes constantes**. La ecuación característica "
+        "es $r^2 = s/\\alpha^2$, con raíces $r = \\pm\\sqrt{s}/\\alpha$. "
+        "La solución general:\n\n"
+        "$$U(x, s) = A(s)\\, e^{-\\sqrt{s}\\, x/\\alpha} + "
+        "B(s)\\, e^{+\\sqrt{s}\\, x/\\alpha}.$$\n\n"
+        "Para que $u(x, t)$ esté **acotada cuando $x \\to \\infty$** "
+        "(o equivalentemente para que la inversa de Laplace exista), "
+        "necesitamos $B(s) = 0$. Aplicando ahora la condición de "
+        "frontera en el dominio transformado:\n\n"
+        "$$u(0, t) = h \\quad\\Rightarrow\\quad U(0, s) = "
+        "\\mathcal{L}[h] = \\frac{h}{s} \\quad\\Rightarrow\\quad "
+        "A(s) = \\frac{h}{s}.$$\n\n"
+        "Por tanto:\n\n"
+        "$$U(x, s) = \\frac{h}{s}\\, e^{-\\sqrt{s}\\, x/\\alpha}.$$"
+    )
+
+
+def T_heat_halfline_inverse() -> str:
+    return (
+        "El último paso es **invertir la transformada de Laplace**. "
+        "El par fundamental que usamos es:\n\n"
+        "$$\\mathcal{L}^{-1}\\!\\left[\\frac{1}{s}\\, e^{-a\\sqrt{s}}\\right](t) = "
+        "\\operatorname{erfc}\\!\\left(\\frac{a}{2\\sqrt{t}}\\right),"
+        "\\quad a > 0,$$\n\n"
+        "donde $\\operatorname{erfc}(z) = "
+        "\\frac{2}{\\sqrt{\\pi}}\\int_z^\\infty e^{-\\tau^2}\\, d\\tau$ "
+        "es la **función error complementaria**. Con $a = x/\\alpha$:\n\n"
+        "$$\\boxed{\\;u(x, t) = h\\, \\operatorname{erfc}\\!\\left("
+        "\\frac{x}{2\\alpha\\sqrt{t}}\\right).\\;}$$\n\n"
+        "La aparición de $\\operatorname{erfc}$ no es accidental: es la "
+        "primitiva del **núcleo de Gauss** que apareció en el problema "
+        "de la recta. Físicamente $\\operatorname{erfc}$ se interpreta "
+        "como la **fracción de probabilidad acumulada** más allá de un "
+        "umbral en una distribución normal, lo que cuadra con la "
+        "interpretación browniana del calor."
+    )
+
+
+def T_heat_halfline_final_formula() -> str:
+    return (
+        "La solución es:\n\n"
+        "$$\\boxed{\\;u(x, t) = h\\, \\operatorname{erfc}\\!\\left("
+        "\\frac{x}{2\\alpha\\sqrt{t}}\\right) "
+        "= h\\, \\left[1 - \\operatorname{erf}\\!\\left("
+        "\\frac{x}{2\\alpha\\sqrt{t}}\\right)\\right].\\;}$$\n\n"
+        "La variable adimensional $\\eta = x/(2\\alpha\\sqrt{t})$ es la "
+        "**variable de similaridad**: la solución **sólo depende del "
+        "cociente** $x/\\sqrt{t}$. Esta autosimilaridad ya la vimos en "
+        "el núcleo de Gauss (núcleo $\\propto \\sqrt{t}$, ancho $\\sim "
+        "\\sqrt{t}$), y aquí se manifiesta como una propiedad del "
+        "perfil entero, no sólo del núcleo."
+    )
+
+
+def T_heat_halfline_physical_interpretation() -> str:
+    return (
+        "Cuatro lecturas físicas inmediatas:\n\n"
+        "- **Longitud de difusión térmica.** $\\delta(t) = "
+        "2\\alpha\\sqrt{t}$ es la profundidad característica hasta "
+        "donde el calor ha penetrado en tiempo $t$. Para $x \\ll "
+        "\\delta(t)$ ya casi $u \\approx h$; para $x \\gg \\delta(t)$ "
+        "todavía $u \\approx 0$. Es la regla práctica del ingeniero: "
+        "el frente avanza como $\\sqrt{t}$, lentamente.\n"
+        "- **Velocidad infinita formal pero penetración finita "
+        "efectiva.** Igual que en la recta entera, $u > 0$ para "
+        "**todo** $x > 0$ y todo $t > 0$ (velocidad infinita). Pero "
+        "$\\operatorname{erfc}$ decae **super-exponencialmente** en su "
+        "argumento, así que más allá de $3\\delta(t)$ la perturbación "
+        "es despreciable.\n"
+        "- **Autosimilaridad.** Si reescalamos $x \\mapsto \\lambda x$ "
+        "y $t \\mapsto \\lambda^2 t$, el cociente $\\eta = "
+        "x/(2\\alpha\\sqrt{t})$ no cambia, y por tanto $u$ tampoco. "
+        "Esta invariancia es la firma de los problemas difusivos en "
+        "dominios sin escala intrínseca de longitud.\n"
+        "- **Flujo en la pared.** "
+        "$-k\\, u_x(0, t) = k h / (\\alpha\\sqrt{\\pi t})$ "
+        "(diverge como $1/\\sqrt{t}$ cuando $t \\to 0^+$). Aplicación "
+        "directa: este es el flujo que entra a un sólido frío cuya "
+        "superficie sube de golpe a $h$; es la base del análisis de "
+        "**templado** en metalurgia."
+    )
+
+
 def T_schrodinger_free_physical_interpretation() -> str:
     return (
         "Cuatro lecturas físicas del propagador libre:\n\n"
