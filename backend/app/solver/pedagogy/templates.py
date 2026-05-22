@@ -1906,6 +1906,162 @@ def T_schrodinger_free_final_formula() -> str:
     )
 
 
+# ===========================================================================
+# General 2nd-order PDE classification (fallback)
+# ===========================================================================
+
+def T_statement_general_2nd_order() -> str:
+    return (
+        "Recibimos una **EDP lineal de segundo orden en dos variables** "
+        "con la forma estándar\n\n"
+        "$$A\\, u_{\\xi_1 \\xi_1} + B\\, u_{\\xi_1 \\xi_2} + "
+        "C\\, u_{\\xi_2 \\xi_2} + (\\text{términos de orden inferior}) = 0,$$\n\n"
+        "donde $(\\xi_1, \\xi_2)$ pueden ser $(x, y)$ (problema "
+        "estacionario / elíptico) o $(x, t)$ (problema de evolución). "
+        "**No tenemos un método cerrado** específico para tu ecuación, "
+        "pero sí podemos hacer algo muy útil: **clasificarla**, "
+        "calcular sus **curvas características** y reducirla a su "
+        "**forma canónica**. Cuando los coeficientes son constantes y "
+        "no hay términos de orden inferior, la forma canónica admite "
+        "una solución general explícita."
+    )
+
+
+def T_general_method_choice() -> str:
+    return (
+        "**Por qué este flujo.** Toda EDP lineal de segundo orden "
+        "pertenece a una de **tres familias** clasificadas por el "
+        "signo del discriminante $\\Delta = B^2 - 4AC$. La "
+        "clasificación es **invariante bajo cambios de variables "
+        "regulares**: define las propiedades fundamentales de la EDP "
+        "(suavizado vs propagación con frente neto, dominios de "
+        "dependencia, número de BCs/ICs necesarias, etc.).\n\n"
+        "El procedimiento sistemático es:\n\n"
+        "1. Identificar $A$, $B$, $C$ leyendo los coeficientes de "
+        "$u_{\\xi_1 \\xi_1}$, $u_{\\xi_1 \\xi_2}$, $u_{\\xi_2 \\xi_2}$.\n"
+        "2. Calcular $\\Delta = B^2 - 4AC$ y clasificar.\n"
+        "3. Resolver la **ecuación característica** "
+        "$A\\, m^2 - B\\, m + C = 0$ donde $m = d\\xi_2/d\\xi_1$.\n"
+        "4. Definir las **variables canónicas** $\\xi, \\eta$ a lo largo "
+        "de las características.\n"
+        "5. Sustituir y obtener la forma canónica. Para EDPs puras de "
+        "segundo orden con coeficientes constantes, esta forma se "
+        "resuelve en forma cerrada."
+    )
+
+
+def T_general_characteristics() -> str:
+    return (
+        "Las **curvas características** son las trayectorias a lo "
+        "largo de las cuales la EDP **pierde control** (la unicidad "
+        "del problema de Cauchy falla). Geométricamente son las "
+        "direcciones a lo largo de las cuales la información se "
+        "propaga (hiperbólico) o desaparece (parabólico).\n\n"
+        "Derivándose de la condición de degeneración "
+        "$A(d\\xi_2)^2 - B\\, d\\xi_1\\, d\\xi_2 + C(d\\xi_1)^2 = 0$, "
+        "con $m = d\\xi_2/d\\xi_1$:\n\n"
+        "$$A\\, m^2 - B\\, m + C = 0 \\quad \\Longrightarrow \\quad "
+        "m = \\frac{B \\pm \\sqrt{B^2 - 4AC}}{2A} = "
+        "\\frac{B \\pm \\sqrt{\\Delta}}{2A}.$$\n\n"
+        "El **número y tipo** de raíces de esta cuadrática es lo que "
+        "nombra las tres familias:\n\n"
+        "- $\\Delta > 0$: **hiperbólica** — dos características reales "
+        "y distintas (ondas viajeras).\n"
+        "- $\\Delta = 0$: **parabólica** — una familia doble (difusión, "
+        "una sola \"dirección dominante\").\n"
+        "- $\\Delta < 0$: **elíptica** — características complejas "
+        "conjugadas (problema estacionario, sin propagación)."
+    )
+
+
+def T_general_canonical_form() -> str:
+    return (
+        "El **cambio de variables a coordenadas canónicas** simplifica "
+        "la EDP a su forma irreducible. La idea: usar las "
+        "características como nuevas coordenadas.\n\n"
+        "- **Hiperbólico** ($\\Delta > 0$): con raíces $m_1, m_2$, "
+        "$\\xi = \\xi_2 - m_1\\, \\xi_1$, $\\eta = \\xi_2 - m_2\\, \\xi_1$. "
+        "La forma canónica es $u_{\\xi\\eta} + (\\text{orden inferior}) = 0$.\n"
+        "- **Parabólico** ($\\Delta = 0$): con la única raíz "
+        "$m = B/(2A)$, $\\xi = \\xi_2 - m\\, \\xi_1$, $\\eta = \\xi_1$ "
+        "(o cualquier otra variable transversal). La forma canónica "
+        "es $u_{\\eta\\eta} + (\\text{orden inferior}) = 0$.\n"
+        "- **Elíptico** ($\\Delta < 0$): con raíces complejas "
+        "$m = \\alpha \\pm i\\beta$, definir "
+        "$\\sigma = \\xi_2 - \\alpha\\, \\xi_1$, "
+        "$\\tau = \\beta\\, \\xi_1$. La forma canónica es "
+        "$u_{\\sigma\\sigma} + u_{\\tau\\tau} + (\\text{orden inferior}) = 0$ "
+        "(Laplaciana en las nuevas variables).\n\n"
+        "**Por qué funciona.** A lo largo de una característica $\\xi = "
+        "\\text{cte}$, la EDP \"no ve\" cambios en esa dirección. "
+        "Reescribirla en coordenadas alineadas con las características "
+        "elimina (o simplifica al máximo) los términos cruzados y los "
+        "términos de segundo orden no esenciales."
+    )
+
+
+def T_general_hyperbolic_closed_form() -> str:
+    return (
+        "**Caso favorable: hiperbólico puro de segundo orden con "
+        "coeficientes constantes.** La forma canónica es exactamente "
+        "$u_{\\xi\\eta} = 0$, cuya solución general es **inmediata**:\n\n"
+        "$$\\boxed{\\; u(\\xi_1, \\xi_2) = F(\\xi) + G(\\eta) \\;}$$\n\n"
+        "donde $F$ y $G$ son funciones arbitrarias de una variable, "
+        "fijadas por las condiciones iniciales/de contorno. Es el "
+        "**teorema de D'Alembert generalizado**: cualquier EDP "
+        "hiperbólica pura de segundo orden con coeficientes constantes "
+        "tiene soluciones tipo \"onda viajera\" a lo largo de cada "
+        "familia de características.\n\n"
+        "**Comparación con la onda clásica.** Para $u_{tt} = c^2 "
+        "u_{xx}$ las características son $t \\mp x/c$, y la fórmula "
+        "se reduce a la D'Alembert estándar $u = F(x - ct) + G(x + ct)$."
+    )
+
+
+def T_general_no_closed_form() -> str:
+    return (
+        "**Por sí sola, la clasificación no determina la solución.** "
+        "Para obtenerla necesitarías especificar:\n\n"
+        "- **Condiciones iniciales y de frontera** apropiadas al tipo "
+        "(número y tipo varía: las EDPs elípticas son problemas de "
+        "contorno; las parabólicas, mixtos; las hiperbólicas, de Cauchy).\n"
+        "- Un **dominio concreto**.\n\n"
+        "Con esos datos, recurre a uno de los métodos específicos del "
+        "repertorio:\n\n"
+        "- **Elíptica** sobre un dominio acotado: separación de "
+        "variables (rectángulo, disco, bola) o función de Green.\n"
+        "- **Hiperbólica** acotada: separación de variables; "
+        "no acotada: D'Alembert / Fourier.\n"
+        "- **Parabólica** acotada con Dirichlet 0: separación de "
+        "variables; no acotada: Fourier; semi-infinita con BC en "
+        "tiempo: Laplace."
+    )
+
+
+def T_general_physical_interpretation() -> str:
+    return (
+        "La clasificación elíptico/parabólico/hiperbólico tiene una "
+        "interpretación física directa:\n\n"
+        "- **Elíptica** ($\\Delta < 0$): describe **estados de "
+        "equilibrio**. La información no se propaga: cualquier cambio "
+        "en la frontera se siente instantáneamente en todo el dominio. "
+        "Ejemplo: distribución estática de potencial (Laplace, Poisson).\n"
+        "- **Parabólica** ($\\Delta = 0$): describe **difusión** y "
+        "procesos irreversibles. La información se propaga "
+        "instantáneamente (velocidad infinita formal) pero se "
+        "**suaviza** rápidamente. Asimetría temporal: el pasado se "
+        "puede reconstruir mal. Ejemplos: calor, Schrödinger libre, "
+        "Black-Scholes.\n"
+        "- **Hiperbólica** ($\\Delta > 0$): describe **propagación "
+        "con velocidad finita**. Las señales viajan a lo largo de las "
+        "características, sin difundirse (en el caso puro). Simetría "
+        "temporal. Ejemplos: onda mecánica, electromagnética, sonido.\n\n"
+        "**Esta es la lección más importante de la teoría de EDPs "
+        "lineales de segundo orden:** tres tipos, tres comportamientos "
+        "físicos cualitativamente distintos."
+    )
+
+
 def T_statement_heat_halfline() -> str:
     return (
         "Resolvemos la **conducción del calor en una barra semi-infinita** "

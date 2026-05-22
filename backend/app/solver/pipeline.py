@@ -16,6 +16,7 @@ from app.solver.methods.biharmonic_beam import BiharmonicBeam
 from app.solver.methods.characteristics import CharacteristicsTransport1D
 from app.solver.methods.dalembert import DAlembertWave1D
 from app.solver.methods.fourier_heat_line import FourierHeatLine
+from app.solver.methods.general_second_order import GeneralSecondOrder
 from app.solver.methods.green_1d import GreensFunction1D
 from app.solver.methods.laplace_heat_halfline import LaplaceHeatHalfLine
 from app.solver.methods.images_halfplane import ImagesHalfPlane
@@ -63,6 +64,7 @@ _METHODS = {
     "sov_laplace_ball": LaplaceBall(),
     "schrodinger_oscillator": SchrodingerHarmonicOscillator(),
     "schrodinger_free": SchrodingerFreeLine(),
+    "general_second_order": GeneralSecondOrder(),
 }
 
 

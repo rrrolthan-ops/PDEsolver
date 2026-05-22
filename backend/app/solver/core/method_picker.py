@@ -344,6 +344,23 @@ def _looks_like_laplace_ball(p: PDEProblem) -> bool:
     return "nabla^2u" in latex or "\\nabla^2u" in latex or "\\delta" in latex
 
 
+def _looks_like_second_order_general(p: PDEProblem) -> bool:
+    """Catch-all for any linear 2nd-order PDE in two variables.
+
+    Fires only as the last resort (registered at the end of the
+    registry). Detects the presence of any 2nd-order derivative
+    notation in the LaTeX.
+    """
+    latex = p.equation_latex.replace(" ", "").lower()
+    second_order_markers = (
+        "u_{xx}", "u_xx", "u_{yy}", "u_yy", "u_{tt}", "u_tt",
+        "u_{xy}", "u_xy", "u_{xt}", "u_xt", "u_{yt}", "u_yt",
+        "u_{yx}", "u_yx", "u_{tx}", "u_tx",
+        "\\partial^2", "partial^2", "u_{xxxx}",
+    )
+    return any(m in latex for m in second_order_markers)
+
+
 def _looks_like_images_halfplane(p: PDEProblem) -> bool:
     """Laplace on a half-plane: geometry hint or domain shape gives it away."""
     if p.geometry == "halfplane":
@@ -407,6 +424,33 @@ def _choice_wave_1d_sov(_p: PDEProblem | None = None) -> MethodChoice:
             "extensiones periódicas impares, en el intervalo $[0, L]$. "
             "La equivalencia entre ambas vistas es uno de los hechos "
             "más instructivos del estudio de ondas."
+        ),
+    )
+
+
+def _choice_general_second_order(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="general_second_order",
+        rationale_md=(
+            "Tu EDP es de **segundo orden lineal en dos variables**, "
+            "pero no encaja con ninguno de los métodos específicos del "
+            "repertorio (probablemente porque los coeficientes, la "
+            "geometría o las BCs son no estándar). En lugar de "
+            "dejarte sin respuesta, aplicamos el **flujo general**: "
+            "clasificación por discriminante, ecuación característica "
+            "y reducción a forma canónica.\n\n"
+            "Este flujo siempre funciona y enseña la **estructura "
+            "intrínseca** de la EDP (elíptica/parabólica/hiperbólica), "
+            "que es la información cualitativa más importante."
+        ),
+        alternatives_md=(
+            "Si tu EDP encaja en una geometría y BCs estándar, "
+            "consulta el repertorio específico (separación de "
+            "variables sobre rectángulo/disco/bola/segmento, "
+            "D'Alembert, Green, imágenes, Bessel, Legendre, etc.). "
+            "El flujo general que aplicamos aquí es una **caja de "
+            "herramientas universal** pero a costa de no producir "
+            "siempre una fórmula explícita."
         ),
     )
 
@@ -803,6 +847,9 @@ _REGISTRY: list[tuple[Callable[[PDEProblem], bool], Callable[[PDEProblem | None]
     (_looks_like_laplace_disk, _choice_laplace_disk),
     (_looks_like_laplace_rect, _choice_laplace_rect),
     (_looks_like_helmholtz_rect, _choice_helmholtz_rect),
+    # Last-resort fallback: any 2nd-order PDE classifier + canonical form.
+    # MUST be last in the registry so specific methods always win.
+    (_looks_like_second_order_general, _choice_general_second_order),
 ]
 
 
@@ -813,13 +860,17 @@ def pick_method(problem: PDEProblem) -> MethodChoice:
             return builder(problem)
     raise NotImplementedError(
         "Ningún método del repertorio actual cubre este problema. "
-        "Repertorio (Fase 1 + 2-A + 2-B + 2-C + 2-D): calor 1D (SOV "
-        "acotado, Fourier en la línea, Laplace en el semieje) y en "
-        "disco, onda 1D (SOV y D'Alembert) y en disco (tambor), "
-        "Laplace en rectángulo, disco, bola y semiplano, Poisson 1D "
-        "(Green), Helmholtz en rectángulo, telégrafo, Schrödinger "
-        "libre, en pozo infinito y oscilador armónico, transporte 1D "
-        "por características, biarmónica/viga 1D."
+        "El catch-all de 2°-orden general debería haber capturado "
+        "cualquier EDP lineal de segundo orden. Revisa el LaTeX: "
+        "puede que no contenga un marcador de segunda derivada "
+        "reconocible (u_{xx}, u_{yy}, u_{tt}, u_{xy}, ...). "
+        "Repertorio específico: calor 1D (SOV acotado, Fourier en la "
+        "línea, Laplace en el semieje) y en disco, onda 1D (SOV y "
+        "D'Alembert) y en disco (tambor), Laplace en rectángulo, "
+        "disco, bola y semiplano, Poisson 1D (Green), Helmholtz en "
+        "rectángulo, telégrafo, Schrödinger libre, en pozo infinito y "
+        "oscilador armónico, transporte 1D por características, "
+        "biarmónica/viga 1D."
     )
 
 

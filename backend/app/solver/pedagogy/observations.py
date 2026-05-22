@@ -548,6 +548,52 @@ _REGISTRY: dict[str, DidacticObservation] = {
             "información viaja como mucho a velocidad $c$ (cono de luz)."
         ),
     ),
+    "classification_is_invariant": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**La clasificación es invariante bajo cambios regulares "
+            "de variables.** Si reemplazas $(x, y) \\to (\\xi(x, y), "
+            "\\eta(x, y))$ con jacobiano no nulo, los nuevos "
+            "coeficientes $A', B', C'$ cumplen "
+            "$(B')^2 - 4 A' C' = J^2\\, (B^2 - 4AC)$ donde $J$ es el "
+            "jacobiano. El **signo** se conserva. Por eso elíptico, "
+            "parabólico e hiperbólico son **propiedades intrínsecas** "
+            "de la EDP, no de la elección de coordenadas — y por eso "
+            "tiene sentido hablar de \"la familia\" a la que pertenece."
+        ),
+    ),
+    "three_families_three_physics": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Tres familias, tres físicas.** El signo del discriminante "
+            "predice **cualitativamente** lo que verás:\n\n"
+            "- $\\Delta > 0$ → **propagación con frente** (cono de "
+            "luz, ondas viajeras, dominios de dependencia compactos).\n"
+            "- $\\Delta = 0$ → **suavizado irreversible** (núcleos "
+            "gaussianos, $\\sqrt{t}$, asimetría temporal).\n"
+            "- $\\Delta < 0$ → **equilibrio sin propagación** "
+            "(principio del máximo, valor medio, dependencia global).\n\n"
+            "Reconocer la familia antes de elegir método ahorra mucho "
+            "trabajo: aplicar D'Alembert a una EDP elíptica o "
+            "transformada de Fourier a una hiperbólica raramente "
+            "lleva a algo útil."
+        ),
+    ),
+    "characteristics_lose_uniqueness": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**Las características son las curvas donde el problema de "
+            "Cauchy degenera.** Si especificas $u$ y $\\partial_n u$ "
+            "sobre una curva $C$ que es característica, **no hay "
+            "unicidad** (existen infinitas soluciones que coinciden "
+            "con el dato sobre $C$). Si $C$ es transversal a las "
+            "características, el problema de Cauchy está bien planteado "
+            "localmente. Esto explica por qué las EDPs elípticas "
+            "(sin características reales) son problemas de contorno "
+            "globales y no admiten datos de Cauchy puntuales sin "
+            "perder regularidad."
+        ),
+    ),
     "laplace_diagonalizes_dt": DidacticObservation(
         kind="theorem",
         text_md=(
