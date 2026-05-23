@@ -13,6 +13,7 @@ import sympy as sp
 from app.schemas import PDEProblem, SolutionResponse
 from app.solver.core.method_picker import pick_method
 from app.solver.methods.biharmonic_beam import BiharmonicBeam
+from app.solver.methods.burgers import BurgersInviscid
 from app.solver.methods.characteristics import CharacteristicsTransport1D
 from app.solver.methods.dalembert import DAlembertWave1D
 from app.solver.methods.fourier_heat_line import FourierHeatLine
@@ -56,6 +57,7 @@ _METHODS = {
     "telegraph_sov": TelegraphSOV(),
     "schrodinger_well": SchrodingerInfiniteWell(),
     "characteristics_transport_1d": CharacteristicsTransport1D(),
+    "burgers_inviscid": BurgersInviscid(),
     "biharmonic_beam": BiharmonicBeam(),
     "images_halfplane": ImagesHalfPlane(),
     "sov_wave_disk": WaveDisk(),
@@ -335,6 +337,13 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
 
     # ---- Quantum harmonic oscillator: |ψ|² as a function of (x, t) -------
 
+    if slug == "burgers_inviscid":
+        # The artifact is u - u_0(x - u·t) = 0 (implicit). We sample by
+        # numerical inversion at each grid point, stopping early if the
+        # method fails to converge (likely past the breaking time).
+        plot = _sample_burgers(expr, x_sym=x, t_sym=t)
+        return plot, None
+
     if slug == "schrodinger_oscillator":
         plot = _sample_oscillator_density(expr, x_sym=x, t_sym=t)
         return plot, None
@@ -435,6 +444,84 @@ def _flatten_sum(expr: sp.Basic) -> tuple[list[tuple[sp.Symbol, int]], sp.Basic]
 # ---------------------------------------------------------------------------
 # Helpers used only by `_sample_for`
 # ---------------------------------------------------------------------------
+
+
+def _sample_burgers(
+    expr: sp.Basic,
+    *,
+    x_sym: sp.Symbol,
+    t_sym: sp.Symbol,
+    x_range: tuple[float, float] = (-3.0, 3.0),
+    t_range: tuple[float, float] = (0.0, 1.5),
+    n_grid: tuple[int, int] = (60, 30),
+) -> dict:
+    """Sample u(x, t) for Burgers by numerically inverting u = u_0(x - u t).
+
+    The artifact ``expr`` is ``u - u_0(x - u t)``; we extract ``u_0`` by
+    substituting back and use ``scipy.optimize.brentq`` to find a root in
+    a wide bracket [u_min, u_max] estimated from the range of u_0 over a
+    coarse sweep. When the bracket fails (typically past the breaking
+    time), we leave NaN — but the plot library will smooth or omit those
+    cells. As a safety, NaN cells get the value of the last valid time
+    slice for plotting continuity.
+    """
+    import numpy as np
+    from scipy.optimize import brentq
+
+    # Recover u_0 by substituting (x_sym, t_sym) -> (z, 0) into
+    # u - u_0(x - u t). With t = 0 the implicit equation becomes
+    # u = u_0(x), so u_0(z) = -expr_at_t0(u=0, x=z) evaluated as a function.
+    u_sym = sp.Symbol("u")
+    # expr = u - u_0(x - u t). At t = 0: expr = u - u_0(x).
+    # So u_0(x) = u - expr|_{t=0} when u = anything; cleaner: u_0(x) = -expr|_{t=0, u=0}.
+    u0_expr = sp.simplify(-expr.subs({t_sym: 0, u_sym: 0}))
+    u0 = sp.lambdify(x_sym, u0_expr, modules=["scipy", "numpy"])
+
+    xs = np.linspace(*x_range, n_grid[0])
+    ts = np.linspace(*t_range, n_grid[1])
+
+    # Estimate amplitude of u_0 to fix the brentq bracket.
+    sweep = np.linspace(x_range[0] - 2.0, x_range[1] + 2.0, 200)
+    u0_sweep = np.asarray(u0(sweep), dtype=float)
+    u_lo, u_hi = float(np.nanmin(u0_sweep)), float(np.nanmax(u0_sweep))
+    margin = max(0.5, (u_hi - u_lo) * 0.5)
+    bracket = (u_lo - margin, u_hi + margin)
+
+    U = np.full((len(ts), len(xs)), np.nan, dtype=float)
+    for i, tv in enumerate(ts):
+        for j, xv in enumerate(xs):
+            # Solve g(u) = u - u_0(xv - u*tv) = 0.
+            def g(u_val, xv=xv, tv=tv):
+                return float(u_val - u0(xv - u_val * tv))
+
+            try:
+                if abs(tv) < 1e-12:
+                    val = float(u0(xv))
+                else:
+                    g_lo, g_hi = g(bracket[0]), g(bracket[1])
+                    if g_lo * g_hi > 0:
+                        # No sign change — most likely past breaking
+                        # time or outside the valid range. Skip.
+                        continue
+                    val = brentq(g, bracket[0], bracket[1])
+                U[i, j] = val
+            except (ValueError, RuntimeError):
+                continue
+
+    # Fill any remaining NaNs with the value from the previous t slice
+    # (so the surface stays continuous past the breaking point).
+    for i in range(1, len(ts)):
+        mask = np.isnan(U[i])
+        U[i, mask] = U[i - 1, mask]
+    # Any remaining NaNs at t=0 fill with 0 (shouldn't happen for sane u_0).
+    U[np.isnan(U)] = 0.0
+
+    return {
+        "kind": "surface_xt",
+        "x": xs.tolist(),
+        "t": ts.tolist(),
+        "u": U.tolist(),
+    }
 
 
 def _sample_laplace_heat_halfline(

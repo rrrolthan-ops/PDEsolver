@@ -1906,6 +1906,127 @@ def T_schrodinger_free_final_formula() -> str:
 
 
 # ===========================================================================
+# Burgers (inviscid) — characteristics + shocks
+# ===========================================================================
+
+def T_statement_burgers() -> str:
+    return (
+        "Resolvemos la **ecuación de Burgers no viscosa** (modelo "
+        "prototipo de EDP cuasi-lineal hiperbólica):\n\n"
+        "$$u_t + u\\, u_x = 0,\\quad x \\in \\mathbb{R},\\ t > 0,\\qquad "
+        "u(x, 0) = u_0(x).$$\n\n"
+        "**Aparente similitud con transporte lineal.** Si reemplazas "
+        "el segundo coeficiente $u$ por una constante $c$, recuperas "
+        "$u_t + c u_x = 0$ — el transporte lineal, cuya solución es "
+        "$u(x, t) = u_0(x - ct)$ (la onda viaja sin deformarse a "
+        "velocidad $c$). Pero aquí **la velocidad de propagación "
+        "depende de la propia solución**, y eso lo cambia todo: las "
+        "regiones donde $u$ es grande viajan más rápido que las "
+        "regiones donde $u$ es pequeño. Si el dato inicial es "
+        "**decreciente**, las características de atrás alcanzan a las "
+        "de adelante en tiempo finito → **choque**."
+    )
+
+
+def T_burgers_method_choice() -> str:
+    return (
+        "**Método de las características generalizado.** Para una EDP "
+        "de primer orden $u_t + a(u) u_x = 0$, las curvas a lo largo "
+        "de las cuales $u$ es constante son las **características**, "
+        "que satisfacen\n\n"
+        "$$\\frac{dx}{dt} = a(u) = u(x, t).$$\n\n"
+        "**Lo crucial.** Como $u$ se conserva a lo largo de la "
+        "característica, su pendiente $dx/dt = u$ es **constante** "
+        "sobre cada curva. Por tanto las características son "
+        "**líneas rectas** — pero con **pendientes distintas** según "
+        "el punto de partida.\n\n"
+        "Eso es lo que produce el choque: dos características con "
+        "pendientes distintas eventualmente se intersectan, y en el "
+        "punto de cruce el método predice **dos valores de $u$ "
+        "incompatibles**. La EDP clásica deja de tener solución "
+        "diferenciable; hay que pasar a **soluciones débiles**."
+    )
+
+
+def T_burgers_characteristics() -> str:
+    return (
+        "Parametrizamos cada característica por el punto $x_0$ donde "
+        "intersecta el eje $t = 0$. A lo largo de ella, $u$ es "
+        "constante igual a $u_0(x_0)$, así que la pendiente $dx/dt = "
+        "u = u_0(x_0)$ es también constante:\n\n"
+        "$$x(t; x_0) = x_0 + u_0(x_0)\\, t,\\qquad "
+        "u(x(t; x_0), t) = u_0(x_0).$$\n\n"
+        "Esta es la **solución implícita** de Burgers: dado $(x, t)$, "
+        "para hallar $u(x, t)$ resolvemos $x = x_0 + u_0(x_0) t$ "
+        "para $x_0$ y leemos $u = u_0(x_0)$. Mientras esta inversión "
+        "tenga **solución única**, la solución clásica existe."
+    )
+
+
+def T_burgers_breaking_time() -> str:
+    return (
+        "**Cuándo se rompe la solución clásica.** La inversión "
+        "$x \\mapsto x_0$ es bien-planteada mientras el jacobiano "
+        "$\\partial x/\\partial x_0 = 1 + u_0'(x_0)\\, t$ sea distinto "
+        "de cero. Cuando alguna característica alcanza a otra:\n\n"
+        "$$1 + u_0'(x_0)\\, t = 0 \\quad \\Longleftrightarrow \\quad "
+        "t = -\\frac{1}{u_0'(x_0)}.$$\n\n"
+        "El **tiempo de ruptura** $t_b$ es el mínimo positivo de estos "
+        "tiempos, alcanzado donde $u_0'$ es más negativa:\n\n"
+        "$$\\boxed{\\; t_b = -\\frac{1}{\\min_{x_0} u_0'(x_0)} "
+        "= \\frac{1}{\\max_{x_0} \\bigl(-u_0'(x_0)\\bigr)}. \\;}$$\n\n"
+        "Si $u_0$ es **no decreciente** (o si $\\min u_0' \\ge 0$), las "
+        "características divergen y la solución clásica existe para "
+        "**todo tiempo**. Si $u_0$ tiene una zona estrictamente "
+        "decreciente, $t_b < \\infty$ y aparece un choque."
+    )
+
+
+def T_burgers_shock_rankine_hugoniot() -> str:
+    return (
+        "**Más allá de $t_b$: solución débil + condición de "
+        "Rankine-Hugoniot.** Para $t > t_b$ buscamos una solución que "
+        "sea diferenciable a trozos, con una **discontinuidad de salto** "
+        "(el choque) que se propaga a lo largo de una curva $x = "
+        "s(t)$. La conservación integral de Burgers, "
+        "$\\frac{d}{dt}\\int u\\, dx = 0$, impone que la velocidad del "
+        "choque sea la media aritmética de los valores a cada lado:\n\n"
+        "$$\\boxed{\\; \\frac{ds}{dt} = "
+        "\\frac{u_L + u_R}{2}, \\;}$$\n\n"
+        "donde $u_L$ y $u_R$ son los valores de $u$ inmediatamente a "
+        "la izquierda y a la derecha del choque. Esta es la **condición "
+        "de Rankine-Hugoniot**: la deducción la verás detallada en los "
+        "cursos avanzados, pero la idea geométrica es \"el choque "
+        "viaja al promedio de las velocidades que conecta\"."
+    )
+
+
+def T_burgers_physical_interpretation() -> str:
+    return (
+        "Tres lecturas físicas y una matemática:\n\n"
+        "- **Tráfico vehicular.** $u$ es la velocidad de los coches. "
+        "Las zonas rápidas alcanzan a las lentas y se forma una onda "
+        "de choque: en una autopista, eso es la frontera nítida entre "
+        "tráfico fluido y atasco.\n"
+        "- **Dinámica de fluidos.** Burgers es el primer paso "
+        "didáctico hacia las ecuaciones de Euler — la velocidad "
+        "advecta a sí misma, las regiones rápidas alcanzan a las "
+        "lentas, y emergen choques (ondas sonoras de choque, "
+        "explosiones).\n"
+        "- **Viscosidad evanescente.** La versión viscosa $u_t + u u_x = "
+        "\\nu u_{xx}$ regulariza el choque: en lugar de discontinuidad, "
+        "hay una capa de transición de espesor $\\sim \\nu$. Cuando "
+        "$\\nu \\to 0^+$, recuperas la onda de choque ideal — esto se "
+        "llama el **límite de viscosidad evanescente** y selecciona "
+        "el único choque físicamente correcto (la \"solución entrópica\").\n"
+        "- **Matemáticamente:** Burgers es el ejemplo más pequeño donde "
+        "una EDP suave puede generar discontinuidades a partir de "
+        "datos suaves. Es la frontera entre la teoría \"limpia\" de "
+        "EDPs lineales y la jungla de las cuasi-lineales hiperbólicas."
+    )
+
+
+# ===========================================================================
 # General 2nd-order PDE classification (fallback)
 # ===========================================================================
 

@@ -286,6 +286,26 @@ def _looks_like_schrodinger_free(p: PDEProblem) -> bool:
     return has_hbar and has_i_u_t and _is_unbounded_x(p)
 
 
+def _looks_like_burgers(p: PDEProblem) -> bool:
+    """Inviscid Burgers' equation u_t + u u_x = 0 on the line."""
+    latex = p.equation_latex.replace(" ", "").lower()
+    burgers_shapes = (
+        "u_t+u*u_x=0",
+        "u_t+uu_x=0",
+        "u_t+u\\cdotu_x=0",
+        "u_t=-u*u_x",
+        "u_t=-uu_x",
+        # Also tolerate explicit "u u_x" with various groupings:
+        "u_t+(1/2)*(u^2)_x=0",
+        "u_t+(u^2/2)_x=0",
+    )
+    if not any(s in latex for s in burgers_shapes):
+        return False
+    # Burgers needs an unbounded line domain (Cauchy problem), exactly
+    # like linear transport.
+    return _is_unbounded_x(p)
+
+
 def _looks_like_characteristics_transport(p: PDEProblem) -> bool:
     """First-order transport u_t + c u_x = 0 on the line."""
     if p.equation_kind == "general":
@@ -699,6 +719,32 @@ def _choice_schrodinger_oscillator(_p: PDEProblem | None = None) -> MethodChoice
     )
 
 
+def _choice_burgers(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="burgers_inviscid",
+        rationale_md=(
+            "La EDP es **cuasi-lineal**: el coeficiente que multiplica "
+            "a $u_x$ es la propia $u$ (no una constante). El método "
+            "de **características generalizado** sigue aplicando, pero "
+            "ahora las pendientes de las curvas dependen del valor "
+            "local de la solución. Eso introduce la fenomenología "
+            "característica de las EDPs cuasi-lineales hiperbólicas: "
+            "**ruptura del gradiente y formación de choques en tiempo "
+            "finito**."
+        ),
+        alternatives_md=(
+            "**No hay alternativa cerrada** para el problema "
+            "general. *Transformada de Cole-Hopf* convierte la "
+            "ecuación viscosa $u_t + u u_x = \\nu u_{xx}$ en la "
+            "ecuación del calor lineal (y por tanto en una "
+            "convolución gaussiana), permitiendo el análisis "
+            "completo del límite $\\nu \\to 0^+$. **Esquemas "
+            "numéricos** (Godunov, Lax-Friedrichs, MUSCL) son la "
+            "ruta práctica más allá del tiempo de choque."
+        ),
+    )
+
+
 def _choice_characteristics(_p: PDEProblem | None = None) -> MethodChoice:
     return MethodChoice(
         method_slug="characteristics_transport_1d",
@@ -831,6 +877,9 @@ _REGISTRY: list[tuple[Callable[[PDEProblem], bool], Callable[[PDEProblem | None]
     (_looks_like_schrodinger_oscillator, _choice_schrodinger_oscillator),
     (_looks_like_schrodinger_well, _choice_schrodinger_well),
     (_looks_like_biharmonic_beam, _choice_biharmonic_beam),
+    # Burgers must come BEFORE linear transport: same shape u_t + ? u_x = 0,
+    # the Burgers predicate is the more specific one (a(u)=u explicitly).
+    (_looks_like_burgers, _choice_burgers),
     (_looks_like_characteristics_transport, _choice_characteristics),
     (_looks_like_poisson_1d, _choice_greens_1d),
     (_looks_like_telegraph, _choice_telegraph),

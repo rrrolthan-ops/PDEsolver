@@ -56,10 +56,11 @@ independientemente del modo de entrada.
 | Schrödinger oscilador armónico `iℏψ_t = −ℏ²/(2m)ψ_xx + ½mω²x²ψ` | `x ∈ ℝ` | Hermite | `schrodinger_oscillator` |
 | Schrödinger libre `iℏψ_t = −ℏ²/(2m)ψ_xx` | `x ∈ ℝ` | Transformada de Fourier / propagador libre | `schrodinger_free` |
 | Transporte `u_t + c·u_x = 0` | `x ∈ ℝ` | Características | `characteristics_transport_1d` |
+| Burgers no viscosa `u_t + u·u_x = 0` | `x ∈ ℝ` | Características generalizadas + Rankine-Hugoniot | `burgers_inviscid` |
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 | **Cualquier EDP lineal 2°-orden** `A u_{ξ₁ξ₁} + B u_{ξ₁ξ₂} + C u_{ξ₂ξ₂} + … = 0` | dos variables | **Clasificador + forma canónica** (fallback) | `general_second_order` |
 
-**210 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
+**223 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
 visualización**: superficies en `(x, t)` o `(x, y)`, gráficos 1D, o
 cortes meridionales según la geometría.
 

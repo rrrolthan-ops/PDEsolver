@@ -547,6 +547,49 @@ _REGISTRY: dict[str, DidacticObservation] = {
             "información viaja como mucho a velocidad $c$ (cono de luz)."
         ),
     ),
+    "burgers_self_steepening": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Por qué Burgers genera choques y el transporte lineal no.** "
+            "En transporte lineal $u_t + c u_x = 0$, todas las "
+            "características son paralelas (pendiente común $c$). El "
+            "perfil viaja rígidamente. En Burgers la pendiente depende "
+            "del valor local $u$, así que zonas con $u$ grande viajan "
+            "más rápido y \"empujan\" a las zonas con $u$ pequeño. "
+            "Esto crea **auto-empinamiento** del frente: cualquier "
+            "dato inicial decreciente acabará por desarrollar un "
+            "gradiente vertical (choque) en tiempo finito."
+        ),
+    ),
+    "rankine_hugoniot_geometric": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**Geometría de Rankine-Hugoniot.** En el plano $(x, t)$, "
+            "el choque es una curva $x = s(t)$ que separa dos regiones "
+            "regulares. La condición $ds/dt = (u_L + u_R)/2$ tiene una "
+            "interpretación gráfica clara: la pendiente del choque "
+            "**biseca** a las dos características que llegan a él. "
+            "Esto se generaliza a leyes de conservación más generales "
+            "$u_t + f(u)_x = 0$ como "
+            "$ds/dt = (f(u_L) - f(u_R))/(u_L - u_R)$ — la pendiente de "
+            "la cuerda entre $(u_L, f(u_L))$ y $(u_R, f(u_R))$."
+        ),
+    ),
+    "burgers_vanishing_viscosity": DidacticObservation(
+        kind="alternative",
+        text_md=(
+            "**Por qué \"el límite cuando ν → 0\" no es lo mismo que "
+            "\"ν = 0 desde el principio\".** Burgers viscosa $u_t + u u_x "
+            "= \\nu u_{xx}$ es **parabólica**: solución suave, única, "
+            "para todo $t > 0$. Burgers no viscosa ($\\nu = 0$) es "
+            "**hiperbólica**: admite **muchas** soluciones débiles, no "
+            "siempre todas físicas. El **principio de selección entrópica** "
+            "dice: la solución física es la que se obtiene como límite "
+            "de las viscosas cuando $\\nu \\to 0^+$. Esto justifica "
+            "matemáticamente la regla \"el choque comprime, nunca "
+            "expande\" (condición de entropía de Lax)."
+        ),
+    ),
     "classification_is_invariant": DidacticObservation(
         kind="theorem",
         text_md=(
