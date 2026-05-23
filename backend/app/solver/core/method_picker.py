@@ -362,6 +362,29 @@ def _looks_like_biharmonic_beam(p: PDEProblem) -> bool:
     return has_4thder and _has_1d_interval_domain(p)
 
 
+def _looks_like_wave_rect_2d(p: PDEProblem) -> bool:
+    """Wave equation on a rectangle (2D, Dirichlet 0 on 4 sides)."""
+    if p.geometry == "disk":
+        return False
+    latex = p.equation_latex.replace(" ", "").lower()
+    wave_2d_shapes = (
+        "u_{tt}=c^2(u_{xx}+u_{yy})",
+        "u_{tt}=c^2*(u_{xx}+u_{yy})",
+        "u_tt=c^2(u_xx+u_yy)",
+        "u_{tt}=c^2\\nabla^2u",
+        "u_{tt}=c^2\\deltau",
+    )
+    has_2d_wave = any(s in latex for s in wave_2d_shapes)
+    has_xy_domain = (
+        p.domain.x is not None
+        and p.domain.y is not None
+        and p.domain.t is not None
+    )
+    if p.equation_kind == "wave" and has_xy_domain:
+        return True
+    return has_2d_wave and has_xy_domain
+
+
 def _looks_like_wave_disk(p: PDEProblem) -> bool:
     """Wave on a disk: geometry hint == disk, equation_kind == wave."""
     if p.geometry != "disk":
@@ -837,6 +860,30 @@ def _choice_biharmonic_beam(_p: PDEProblem | None = None) -> MethodChoice:
     )
 
 
+def _choice_wave_rect_2d(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="sov_wave_rect",
+        rationale_md=(
+            "Tambor **rectangular** con bordes fijos. Separación de "
+            "variables en cartesianas $(x, y, t)$ produce una "
+            "**base producto** $\\sin(m\\pi x/a)\\sin(n\\pi y/b)$ con "
+            "autovalores $\\mu_{mn} = (m\\pi/a)^2 + (n\\pi/b)^2$. La "
+            "frecuencia angular de cada modo es $\\omega_{mn} = "
+            "c\\sqrt{\\mu_{mn}}$ — **inarmónica** en general (a "
+            "diferencia de la cuerda 1D)."
+        ),
+        alternatives_md=(
+            "**Función de Green del operador de onda 2D rectángulo** "
+            "daría la misma respuesta como integral. **Imágenes** "
+            "(extensión por reflexión a $\\mathbb{R}^2$) reduce el "
+            "problema a D'Alembert en el plano, pero la receta "
+            "involucra una suma de imágenes en una rejilla y termina "
+            "siendo equivalente a la serie. Pedagógicamente, SOV en "
+            "cartesianas es la opción más limpia."
+        ),
+    )
+
+
 def _choice_wave_disk(_p: PDEProblem | None = None) -> MethodChoice:
     return MethodChoice(
         method_slug="sov_wave_disk",
@@ -940,6 +987,7 @@ _REGISTRY: list[tuple[Callable[[PDEProblem], bool], Callable[[PDEProblem | None]
     (_looks_like_telegraph, _choice_telegraph),
     # Geometry-specific (must precede the more general Heat/Wave 1D predicates).
     (_looks_like_wave_disk, _choice_wave_disk),
+    (_looks_like_wave_rect_2d, _choice_wave_rect_2d),
     (_looks_like_heat_disk, _choice_heat_disk),
     (_looks_like_laplace_ball, _choice_laplace_ball),
     (_looks_like_heat_halfline, _choice_laplace_heat_halfline),

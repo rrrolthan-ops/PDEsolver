@@ -34,6 +34,7 @@ from app.solver.methods.sov_laplace_disk import SeparationOfVariablesLaplaceDisk
 from app.solver.methods.sov_telegraph import TelegraphSOV
 from app.solver.methods.sov_wave import SeparationOfVariablesWave1D
 from app.solver.methods.sov_wave_disk import WaveDisk
+from app.solver.methods.sov_wave_rect import WaveRect2D
 from app.solver.numerics import (
     convergence_snapshots,
     sample_2d,
@@ -63,6 +64,7 @@ _METHODS = {
     "biharmonic_beam": BiharmonicBeam(),
     "images_halfplane": ImagesHalfPlane(),
     "sov_wave_disk": WaveDisk(),
+    "sov_wave_rect": WaveRect2D(),
     "sov_heat_disk": HeatDisk(),
     "sov_laplace_ball": LaplaceBall(),
     "schrodinger_oscillator": SchrodingerHarmonicOscillator(),
@@ -285,6 +287,10 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
         )
         return plot, None
 
+    if slug == "sov_wave_rect":
+        plot = _sample_wave_rect(expr, x_sym=x, t_sym=t)
+        return plot, None
+
     if slug == "sov_wave_disk":
         r = sp.Symbol("r", nonnegative=True)
         R = sp.Symbol("R", positive=True)
@@ -457,6 +463,88 @@ def _flatten_sum(expr: sp.Basic) -> tuple[list[tuple[sp.Symbol, int]], sp.Basic]
 # ---------------------------------------------------------------------------
 # Helpers used only by `_sample_for`
 # ---------------------------------------------------------------------------
+
+
+def _sample_wave_rect(
+    expr: sp.Basic,
+    *,
+    x_sym: sp.Symbol,
+    t_sym: sp.Symbol,
+    n_terms: int = 6,
+    n_grid: tuple[int, int] = (40, 40),
+) -> dict:
+    """Render the initial-profile snapshot of u(x, y, 0) for the rectangular drum.
+
+    The artifact is a double Sum whose general term contains an
+    Integral (the coefficient A_{mn}). We truncate the sum to
+    n_terms × n_terms, evaluate each integral symbolically (most are
+    zero by orthogonality except for the modes present in f), and
+    lambdify the resulting closed-form expression at t = 0.
+    """
+    import itertools
+
+    import numpy as np
+
+    y_sym = sp.Symbol("y", real=True)
+    a = sp.Symbol("a", positive=True)
+    b = sp.Symbol("b", positive=True)
+    c = sp.Symbol("c", positive=True)
+    params = {a: 1.0, b: 1.0, c: 1.0}
+
+    # Snapshot at t = 0.
+    snapshot = expr.subs(t_sym, 0)
+    # Peel the nested Sum to find dummies + body.
+    dummies: list[tuple[sp.Symbol, int]] = []
+    body = snapshot
+    while isinstance(body, sp.Sum):
+        for d in body.limits:
+            dummies.append((d[0], int(d[1])))
+        body = body.function
+
+    syms = [d for d, _ in dummies]
+    ranges = [range(lo, lo + n_terms) for _, lo in dummies]
+
+    total = sp.S.Zero
+    for vals in itertools.product(*ranges):
+        term = body.subs(dict(zip(syms, vals, strict=True)))
+        if term.has(sp.Integral):
+            term = term.doit()
+        total = total + term
+
+    total = sp.simplify(total.subs(params))
+
+    free = total.free_symbols
+    bound = tuple(s for s in (x_sym, y_sym) if s in free)
+    if not bound:
+        U = np.full((n_grid[1], n_grid[0]), float(total))
+        xs = np.linspace(0.0, 1.0, n_grid[0])
+        ys = np.linspace(0.0, 1.0, n_grid[1])
+        return {
+            "kind": "surface_xy",
+            "x": xs.tolist(),
+            "y": ys.tolist(),
+            "u": U.tolist(),
+            "x_label": "x",
+            "y_label": "y",
+        }
+    f_num = sp.lambdify(bound, total, modules=["scipy", "numpy"])
+    xs = np.linspace(0.0, 1.0, n_grid[0])
+    ys = np.linspace(0.0, 1.0, n_grid[1])
+    X, Y = np.meshgrid(xs, ys, indexing="xy")
+    if bound == (x_sym, y_sym):
+        U = np.asarray(f_num(X, Y), dtype=float)
+    elif bound == (x_sym,):
+        U = np.asarray(f_num(X), dtype=float)
+    else:
+        U = np.asarray(f_num(Y), dtype=float)
+    return {
+        "kind": "surface_xy",
+        "x": xs.tolist(),
+        "y": ys.tolist(),
+        "u": U.tolist(),
+        "x_label": "x",
+        "y_label": "y",
+    }
 
 
 def _sample_duhamel_heat(

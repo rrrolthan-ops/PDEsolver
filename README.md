@@ -46,6 +46,7 @@ independientemente del modo de entrada.
 | Onda `u_tt = c² u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `sov_wave_1d` |
 | Onda `u_tt = c² u_xx` | `x ∈ ℝ` | Fórmula de D'Alembert | `dalembert_wave_1d` |
 | Onda `u_tt = c²Δu` | disco `r < R` axisimétrico (tambor) | Bessel-Fourier | `sov_wave_disk` |
+| Onda 2D `u_tt = c²(u_xx + u_yy)` | rectángulo `[0,a]×[0,b]`, Dirichlet 0 | SOV doble (modos `m,n`) | `sov_wave_rect` |
 | Laplace `∇²u = 0` | `[0, a] × [0, b]` | Separación de variables | `sov_laplace_rect` |
 | Laplace `∇²u = 0` | disco `r < R` | Separación en polares + Poisson | `sov_laplace_disk` |
 | Laplace `∇²u = 0` | semiplano `y > 0` | Método de imágenes | `images_halfplane` |
@@ -61,7 +62,7 @@ independientemente del modo de entrada.
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 | **Cualquier EDP lineal 2°-orden** `A u_{ξ₁ξ₁} + B u_{ξ₁ξ₂} + C u_{ξ₂ξ₂} + … = 0` | dos variables | **Clasificador + forma canónica** (fallback) | `general_second_order` |
 
-**234 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
+**245 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
 visualización**: superficies en `(x, t)` o `(x, y)`, gráficos 1D, o
 cortes meridionales según la geometría.
 

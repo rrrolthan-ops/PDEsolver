@@ -1906,6 +1906,110 @@ def T_schrodinger_free_final_formula() -> str:
 
 
 # ===========================================================================
+# Wave 2D on a rectangle (rectangular drum)
+# ===========================================================================
+
+def T_statement_wave_rect_2d() -> str:
+    return (
+        "Resolvemos la **ecuación de onda 2D** sobre un rectángulo con "
+        "bordes fijos (un **tambor rectangular**):\n\n"
+        "$$u_{tt} = c^2 (u_{xx} + u_{yy}),\\quad "
+        "(x, y) \\in [0, a] \\times [0, b],\\ t > 0,$$\n\n"
+        "con $u = 0$ sobre los cuatro lados, "
+        "$u(x, y, 0) = f(x, y)$ y "
+        "$u_t(x, y, 0) = g(x, y)$.\n\n"
+        "Es el complemento natural del **tambor circular**: misma "
+        "ecuación, geometría distinta. La geometría rectangular "
+        "permite separar limpiamente en cartesianas y obtener una "
+        "**base producto** $\\sin(m\\pi x/a)\\sin(n\\pi y/b)$ — sin "
+        "necesidad de funciones especiales (a diferencia del disco, "
+        "que requiere Bessel)."
+    )
+
+
+def T_wave_rect_method_choice() -> str:
+    return (
+        "**Separación doble en cartesianas.** Postulamos\n\n"
+        "$$u(x, y, t) = X(x)\\, Y(y)\\, T(t),$$\n\n"
+        "sustituimos en la EDP y dividimos por $X Y T$. La "
+        "separación produce **tres** EDOs ordinarias:\n\n"
+        "$$\\frac{T''}{c^2 T} = \\frac{X''}{X} + \\frac{Y''}{Y} = "
+        "-\\mu \\quad \\text{(constante)}.$$\n\n"
+        "A su vez $X''/X = -\\lambda$ y $Y''/Y = \\lambda - \\mu = -\\nu$ "
+        "son separadas: dos problemas de Sturm-Liouville independientes "
+        "en $x$ e $y$, cada uno con autovalores discretos. La condición "
+        "$\\mu = \\lambda + \\nu$ acopla los autovalores y produce el "
+        "**espectro bidimensional** $\\omega_{mn} = c\\sqrt{\\mu_{mn}}$."
+    )
+
+
+def T_wave_rect_eigenmodes() -> str:
+    return (
+        "Las cuatro BCs homogéneas en $x = 0, a$ y $y = 0, b$ "
+        "determinan los modos:\n\n"
+        "$$X_m(x) = \\sin\\!\\left(\\frac{m\\pi x}{a}\\right),\\ "
+        "\\lambda_m = \\left(\\frac{m\\pi}{a}\\right)^2,\\quad "
+        "m = 1, 2, 3, \\ldots,$$\n\n"
+        "$$Y_n(y) = \\sin\\!\\left(\\frac{n\\pi y}{b}\\right),\\ "
+        "\\nu_n = \\left(\\frac{n\\pi}{b}\\right)^2,\\quad "
+        "n = 1, 2, 3, \\ldots.$$\n\n"
+        "El **autovalor 2D** y la **frecuencia angular** de cada modo:\n\n"
+        "$$\\mu_{mn} = \\lambda_m + \\nu_n = \\pi^2\\left("
+        "\\frac{m^2}{a^2} + \\frac{n^2}{b^2}\\right),\\qquad "
+        "\\omega_{mn} = c\\sqrt{\\mu_{mn}} = c \\pi\\, \\sqrt{"
+        "\\frac{m^2}{a^2} + \\frac{n^2}{b^2}}.$$\n\n"
+        "Cada par $(m, n)$ define un **patrón de nodos** (las líneas "
+        "$\\sin = 0$): rectas horizontales y verticales que cuadriculan "
+        "el rectángulo en $m \\times n$ celdas vibrando en fase opuesta."
+    )
+
+
+def T_wave_rect_solution() -> str:
+    return (
+        "**Solución general** (serie doble en modos normales):\n\n"
+        "$$\\boxed{\\; u(x, y, t) = \\sum_{m=1}^{\\infty} \\sum_{n=1}^{\\infty} "
+        "\\bigl( A_{mn} \\cos(\\omega_{mn} t) + B_{mn} \\sin(\\omega_{mn} t) \\bigr)\\, "
+        "\\sin\\!\\left(\\frac{m\\pi x}{a}\\right) "
+        "\\sin\\!\\left(\\frac{n\\pi y}{b}\\right), \\;}$$\n\n"
+        "con coeficientes obtenidos por **doble proyección** sobre la "
+        "base producto:\n\n"
+        "$$A_{mn} = \\frac{4}{ab}\\int_0^a\\!\\!\\int_0^b "
+        "f(x, y)\\, \\sin\\!\\left(\\frac{m\\pi x}{a}\\right)"
+        "\\sin\\!\\left(\\frac{n\\pi y}{b}\\right)\\, dx\\, dy,$$\n\n"
+        "$$B_{mn} = \\frac{4}{ab\\, \\omega_{mn}}\\int_0^a\\!\\!\\int_0^b "
+        "g(x, y)\\, \\sin\\!\\left(\\frac{m\\pi x}{a}\\right)"
+        "\\sin\\!\\left(\\frac{n\\pi y}{b}\\right)\\, dx\\, dy.$$\n\n"
+        "La ortogonalidad de los senos en cada dirección, combinada "
+        "vía Fubini, justifica la inversión término-a-término."
+    )
+
+
+def T_wave_rect_physical_interpretation() -> str:
+    return (
+        "**Comparación de tambores: 1D vs 2D-rectángulo vs 2D-disco.**\n\n"
+        "- **Cuerda** ($n\\pi/L$): frecuencias $\\omega_n = cn\\pi/L$, "
+        "**armónicas enteras**. Por eso una cuerda suena \"musical\".\n"
+        "- **Tambor circular** (ceros de $J_0$): "
+        "$\\mu_2/\\mu_1 \\approx 2.295$, $\\mu_3/\\mu_1 \\approx 3.598$, …, "
+        "**inarmónicas irracionales**. Suena \"a percusión\", no a nota.\n"
+        "- **Tambor rectangular** ($a$ y $b$ no proporcionales): "
+        "$\\omega_{mn}/\\omega_{11} = "
+        "\\sqrt{(m^2/a^2 + n^2/b^2)/(1/a^2 + 1/b^2)}$. Inarmónico en "
+        "general; si $a = b$ (cuadrado), aparece **degeneración** "
+        "$\\omega_{mn} = \\omega_{nm}$ — distintos modos comparten "
+        "frecuencia.\n\n"
+        "**Mark Kac (1966): \"Can one hear the shape of a drum?\"** Si "
+        "te dan el espectro $\\{\\omega_{mn}\\}$ de un tambor, ¿puedes "
+        "reconstruir la geometría? Para tambores convexos suficientemente "
+        "simétricos, sí. **Pero existen pares de tambores no isométricos "
+        "con espectros idénticos** (Gordon-Webb-Wolpert 1992 — "
+        "construcciones poligonales). Es uno de los teoremas más "
+        "elegantes del siglo XX: el espectro **casi** determina la "
+        "geometría, pero no del todo."
+    )
+
+
+# ===========================================================================
 # Duhamel (heat equation with source on the real line)
 # ===========================================================================
 

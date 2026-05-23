@@ -547,6 +547,36 @@ _REGISTRY: dict[str, DidacticObservation] = {
             "información viaja como mucho a velocidad $c$ (cono de luz)."
         ),
     ),
+    "rectangular_drum_degeneracy": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Degeneración en el cuadrado.** Cuando $a = b$, los pares "
+            "$(m, n)$ y $(n, m)$ producen autovalores **idénticos**: "
+            "$\\mu_{mn} = \\mu_{nm}$. Físicamente, dos patrones de "
+            "vibración distintos (uno con $m$ medios-períodos en $x$ "
+            "y $n$ en $y$, el otro al revés) tienen exactamente la "
+            "misma frecuencia. Cualquier combinación lineal de ellos "
+            "es también un modo. **Esta es la razón por la que las "
+            "**figuras de Chladni en placas cuadradas pueden adoptar "
+            "patrones muy distintos** para la misma frecuencia "
+            "excitadora: el subespacio degenerado lo permite."
+        ),
+    ),
+    "kac_hear_shape_of_drum": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**\"Can one hear the shape of a drum?\" (Mark Kac, 1966).** "
+            "El espectro $\\{\\omega_{mn}\\}$ codifica muchísima "
+            "información geométrica del dominio — área, perímetro, "
+            "Euler-Poincaré, e incluso la curvatura promedio. Pero "
+            "**no determina la forma**: Gordon, Webb y Wolpert "
+            "construyeron en 1992 pares de polígonos distintos con "
+            "**espectros idénticos**. La conclusión es delicada: el "
+            "espectro **casi** determina la geometría, pero existen "
+            "isoespectrales no isométricos. Un teorema fundamental "
+            "para la teoría espectral inversa moderna."
+        ),
+    ),
     "duhamel_superposition": DidacticObservation(
         kind="theorem",
         text_md=(
