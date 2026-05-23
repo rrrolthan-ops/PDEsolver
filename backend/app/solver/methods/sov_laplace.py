@@ -45,7 +45,6 @@ class SeparationOfVariablesLaplaceRect(Method):
         y = sp.Symbol("y", real=True)
         a = sp.Symbol("a", positive=True)
         b = sp.Symbol("b", positive=True)
-        n = sp.Symbol("n", integer=True, positive=True)
 
         # ---------- Extract the boundary profile f(x) -------------------------
         # By convention we expect the nonhomogeneous BC to be `u(x, b) = f`,

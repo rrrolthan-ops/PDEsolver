@@ -124,7 +124,7 @@ class LaplaceHeatHalfLine(Method):
             [
                 r"&\text{EDP:} \quad u_t = \alpha^2\, u_{xx}, "
                 r"\quad x > 0,\quad t > 0,",
-                rf"&\text{{condición inicial:}} \quad u(x, 0) = 0,",
+                r"&\text{condición inicial:} \quad u(x, 0) = 0,",
                 rf"&\text{{frontera (pared):}} \quad u(0, t) = {h_value},",
                 r"&\text{decaimiento al infinito:} \quad "
                 r"u(x, t) \to 0 \text{ acotada cuando } x \to \infty.",

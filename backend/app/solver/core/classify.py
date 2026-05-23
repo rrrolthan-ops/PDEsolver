@@ -21,7 +21,6 @@ from typing import Literal
 
 import sympy as sp
 
-
 PDEType = Literal["elliptic", "parabolic", "hyperbolic", "unknown"]
 
 

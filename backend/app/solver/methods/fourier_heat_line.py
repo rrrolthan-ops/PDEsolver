@@ -135,7 +135,7 @@ class FourierHeatLine(Method):
             ),
             latex=equation_chain(
                 [
-                    rf"A &= \alpha^2,\quad B = 0,\quad C = 0,",
+                    r"A &= \alpha^2,\quad B = 0,\quad C = 0,",
                     rf"\Delta &= B^2 - 4AC = {sp.latex(disc)},",
                     r"&\Rightarrow \text{EDP parabólica}.",
                 ]

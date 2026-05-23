@@ -21,7 +21,6 @@ import sympy as sp
 from app.schemas import StepKind
 from app.solver import solve
 
-
 # ---------------------------------------------------------------------------
 # Symbolic helpers for assertions
 # ---------------------------------------------------------------------------

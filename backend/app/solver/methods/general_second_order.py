@@ -119,11 +119,7 @@ class GeneralSecondOrder(Method):
 
         # ===== PASO 7 — Verification (only if closed form available) =========
         if gave_closed_form:
-            steps.append(
-                self._step_verification(
-                    family, solution_expr, roots, xi1, xi2, xi1_name, xi2_name
-                )
-            )
+            steps.append(self._step_verification(xi1_name, xi2_name))
 
         # ===== PASO 8 — Visualization (skipped — no concrete u) ==============
         # We skip this for the generic case.
@@ -251,11 +247,11 @@ class GeneralSecondOrder(Method):
         }[family]
         return step(
             kind="classification",
-            title=f"Paso 3 — Discriminante y clasificación",
+            title="Paso 3 — Discriminante y clasificación",
             md=(
-                f"Computamos $\\Delta = B^2 - 4AC$. Esta cantidad es "
-                f"**la** invariante que clasifica la EDP en una de las "
-                f"tres familias:"
+                "Computamos $\\Delta = B^2 - 4AC$. Esta cantidad es "
+                "**la** invariante que clasifica la EDP en una de las "
+                "tres familias:"
             ),
             latex=equation_chain(
                 [
@@ -280,7 +276,7 @@ class GeneralSecondOrder(Method):
         xi2_name: str,
     ) -> Step:
         lines = [
-            rf"A\, m^2 - B\, m + C &= 0,",
+            r"A\, m^2 - B\, m + C &= 0,",
             rf"m &= \frac{{B \pm \sqrt{{\Delta}}}}{{2A}}"
             rf" = \frac{{{sp.latex(B)} \pm \sqrt{{{sp.latex(discriminant)}}}}}"
             rf"{{2({sp.latex(A)})}}.",
@@ -440,37 +436,16 @@ class GeneralSecondOrder(Method):
 
     def _step_verification(
         self,
-        family: str,
-        solution_expr: sp.Basic,
-        roots: tuple[sp.Basic, ...],
-        xi1: sp.Symbol,
-        xi2: sp.Symbol,
         xi1_name: str,
         xi2_name: str,
     ) -> Step:
-        # For u = F(ξ) + G(η) with ξ = xi2 − m1·xi1, η = xi2 − m2·xi1,
-        # the canonical PDE u_{ξη} = 0 holds **identically** in F, G.
-        # We exhibit that by differentiating once each.
-        m1, m2 = roots
-        F = sp.Function("F")
-        G = sp.Function("G")
-        xi = xi2 - m1 * xi1
-        eta = xi2 - m2 * xi1
-        u_expr = F(xi) + G(eta)
-        # By the chain rule:
-        #   ∂_xi1 u = F'(ξ)(−m1) + G'(η)(−m2)
-        #   ∂_xi2 ∂_xi1 u = F''(ξ)(−m1)(1) + G''(η)(−m2)(1) ... wait that's u_xixi
-        # We want to verify the **original** PDE A u_{xi1 xi1} + B u_{xi1 xi2}
-        # + C u_{xi2 xi2} = 0 holds. Let's compute that residual.
-        u_x = sp.diff(u_expr, xi1)
-        u_xx = sp.diff(u_x, xi1)
-        u_xy = sp.diff(u_x, xi2)
-        u_yy = sp.diff(u_expr, xi2, 2)
-
-        # A m² − B m + C = 0 for both roots, so
-        #   A u_xx + B u_xy + C u_yy = 0 holds identically.
-        # We don't recompute A, B, C here — we just present the chain
-        # of equalities.
+        # The verification is *algebraic* — by the chain rule on
+        # u = F(ξ) + G(η) with ξ = ξ2 − m1 ξ1, η = ξ2 − m2 ξ1:
+        #   A u_{ξ1ξ1} + B u_{ξ1ξ2} + C u_{ξ2ξ2}
+        #     = (A m1² − B m1 + C) F''(ξ) + (A m2² − B m2 + C) G''(η)
+        # which vanishes identically because m1, m2 are roots of the
+        # characteristic polynomial A m² − B m + C. We render this
+        # chain of equalities in LaTeX; no SymPy computation needed.
         return step(
             kind="verification",
             title=r"Paso 7 — Verificación de la solución u = F(\xi) + G(\eta)",

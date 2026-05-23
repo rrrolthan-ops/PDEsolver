@@ -171,7 +171,7 @@ class SchrodingerInfiniteWell(Method):
                 [
                     r"\varphi(0) = \varphi(L) = 0 &\Rightarrow "
                     r"\sqrt{\tfrac{2mE}{\hbar^2}}\, L = n\pi,",
-                    rf"E_n &= \frac{{n^2 \pi^2 \hbar^2}}{{2 m L^2}},",
+                    r"E_n &= \frac{n^2 \pi^2 \hbar^2}{2 m L^2},",
                     r"\varphi_n(x) &= \sqrt{\tfrac{2}{L}}\, \sin\!\bigl(\tfrac{n\pi x}{L}\bigr).",
                 ]
             ),

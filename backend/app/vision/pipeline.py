@@ -16,7 +16,8 @@ import logging
 
 from app.schemas.vision import VisionExtractionResult
 
-from . import claude_extractor, preprocess as preprocess_module
+from . import claude_extractor
+from . import preprocess as preprocess_module
 
 logger = logging.getLogger(__name__)
 

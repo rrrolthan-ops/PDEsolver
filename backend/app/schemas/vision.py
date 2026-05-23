@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field
 
 from .problem import PDEProblem
 
-
 Confidence = Literal["high", "medium", "low"]
 
 

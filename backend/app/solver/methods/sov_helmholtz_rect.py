@@ -297,14 +297,11 @@ class HelmholtzRect(Method):
         x: sp.Symbol,
         y: sp.Symbol,
     ) -> list[Step]:
-        # We verify the generic term inside the double sum.
-        outer = solution_expr.function if isinstance(solution_expr, sp.Sum) else solution_expr
-        inner = outer.function if isinstance(outer, sp.Sum) else outer
-        u_xx = sp.diff(inner, x, 2)
-        u_yy = sp.diff(inner, y, 2)
-        residual = sp.simplify(u_xx + u_yy + k**2 * inner - sp.S(0))
-        # The residual after operator application should equal f_mn φ_mn; we
-        # just confirm the action of the operator pulls out the right factor.
+        # The verification here is symbolic: applying Δ + k² to the
+        # generic eigenfunction φ_mn produces (k² − k_mn²) φ_mn, and the
+        # matching-coefficient identity c_mn (k² − k_mn²) = f_mn closes
+        # the loop. No SymPy computation is required to show this — the
+        # algebra is recorded directly in the rendered step below.
         s_intro = step(
             kind="verification",
             title="Paso 7 — Verificación",
@@ -313,7 +310,7 @@ class HelmholtzRect(Method):
                 "comprobamos que coincide con el término correspondiente "
                 "de la expansión de $f$."
             ),
-            latex=rf"(\Delta + k^2) c_{{mn}} \phi_{{mn}} = c_{{mn}}(k^2 - k_{{mn}}^2)\, \phi_{{mn}}\overset{{!}}{{=}} f_{{mn}}\, \phi_{{mn}}.",
+            latex=r"(\Delta + k^2) c_{mn} \phi_{mn} = c_{mn}(k^2 - k_{mn}^2)\, \phi_{mn}\overset{!}{=} f_{mn}\, \phi_{mn}.",
             level="intermediate",
         )
         return [s_intro]

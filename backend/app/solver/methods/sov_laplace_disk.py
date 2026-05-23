@@ -38,7 +38,6 @@ class SeparationOfVariablesLaplaceDisk(Method):
         r = sp.Symbol("r", nonnegative=True)
         theta = sp.Symbol("theta", real=True)
         R = sp.Symbol("R", positive=True)
-        n = sp.Symbol("n", integer=True, positive=True)
 
         # Extract f(theta) from the boundary condition.
         f_latex = "0"

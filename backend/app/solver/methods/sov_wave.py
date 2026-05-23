@@ -42,7 +42,6 @@ class SeparationOfVariablesWave1D(Method):
         t = sp.Symbol("t", real=True, nonnegative=True)
         L = sp.Symbol("L", positive=True)
         c = sp.Symbol("c", positive=True)
-        n = sp.Symbol("n", integer=True, positive=True)
 
         # ---------- Parse f and g ---------------------------------------------
         # Wave problems carry two ICs: order=0 (position) and order=1 (velocity).

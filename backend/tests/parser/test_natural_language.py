@@ -10,7 +10,6 @@ import pytest
 
 from app.parser import ParseError, parse_natural_language
 
-
 # ---------------------------------------------------------------------------
 # Spanish phrasings
 # ---------------------------------------------------------------------------

@@ -15,7 +15,7 @@ returns partial sums at N = 1, 5, 20, 100.
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import sympy as sp
@@ -637,7 +637,7 @@ def sample_helmholtz_rect(
     syms = [d for d, _ in dummies]
     total = sp.S.Zero
     for vals in itertools.product(*ranges):
-        total = total + body.subs(dict(zip(syms, vals)))
+        total = total + body.subs(dict(zip(syms, vals, strict=True)))
 
     total = total.subs(base_subs).subs(k_sub)
     if total.has(sp.Integral):

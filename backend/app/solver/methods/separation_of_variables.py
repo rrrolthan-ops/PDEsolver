@@ -59,7 +59,6 @@ class SeparationOfVariablesHeat1D(Method):
         t = sp.Symbol("t", real=True, nonnegative=True)
         L = sp.Symbol("L", positive=True)
         alpha = sp.Symbol("alpha", positive=True)
-        n = sp.Symbol("n", integer=True, positive=True)
 
         # ---------- Parse the initial profile ---------------------------------
         f_latex = problem.initial_conditions[0].value if problem.initial_conditions else "0"
@@ -240,7 +239,7 @@ class SeparationOfVariablesHeat1D(Method):
                 [
                     rf"u_t &= {sp.latex(u_t_val)},",
                     rf"u_{{xx}} &= {sp.latex(u_xx_val)},",
-                    rf"\Rightarrow \quad X(x)\, T'(t) &= \alpha^2\, X''(x)\, T(t).",
+                    r"\Rightarrow \quad X(x)\, T'(t) &= \alpha^2\, X''(x)\, T(t).",
                 ]
             ),
             level="basic",

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import sympy as sp
-
 from app.schemas import (
     BoundaryCondition,
     Domain,

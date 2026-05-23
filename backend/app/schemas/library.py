@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field
 from .problem import PDEProblem
 from .solution import SolutionResponse
 
-
 LibrarySource = Literal["manual", "natural", "vision"]
 
 

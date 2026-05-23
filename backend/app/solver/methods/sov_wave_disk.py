@@ -169,8 +169,8 @@ class WaveDisk(Method):
                     r"R(R) = 0 &\Rightarrow J_0(\sqrt{\lambda}\, R) = 0,",
                     r"&\Rightarrow \sqrt{\lambda_n}\, R = \mu_n,\quad "
                     r"\mu_n \text{ = }n\text{-ésimo cero positivo de }J_0,",
-                    rf"\boxed{{\;\lambda_n = (\mu_n/R)^2,\quad "
-                    rf"R_n(r) = J_0(\mu_n r/R).\;}}",
+                    r"\boxed{\;\lambda_n = (\mu_n/R)^2,\quad "
+                    r"R_n(r) = J_0(\mu_n r/R).\;}",
                 ]
             ),
             level="basic",

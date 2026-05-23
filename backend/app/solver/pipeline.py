@@ -18,14 +18,14 @@ from app.solver.methods.dalembert import DAlembertWave1D
 from app.solver.methods.fourier_heat_line import FourierHeatLine
 from app.solver.methods.general_second_order import GeneralSecondOrder
 from app.solver.methods.green_1d import GreensFunction1D
-from app.solver.methods.laplace_heat_halfline import LaplaceHeatHalfLine
 from app.solver.methods.images_halfplane import ImagesHalfPlane
+from app.solver.methods.laplace_heat_halfline import LaplaceHeatHalfLine
 from app.solver.methods.schrodinger_free import SchrodingerFreeLine
 from app.solver.methods.schrodinger_oscillator import SchrodingerHarmonicOscillator
 from app.solver.methods.schrodinger_well import SchrodingerInfiniteWell
 from app.solver.methods.separation_of_variables import SeparationOfVariablesHeat1D
-from app.solver.methods.sov_helmholtz_rect import HelmholtzRect
 from app.solver.methods.sov_heat_disk import HeatDisk
+from app.solver.methods.sov_helmholtz_rect import HelmholtzRect
 from app.solver.methods.sov_laplace import SeparationOfVariablesLaplaceRect
 from app.solver.methods.sov_laplace_ball import LaplaceBall
 from app.solver.methods.sov_laplace_disk import SeparationOfVariablesLaplaceDisk
@@ -41,7 +41,6 @@ from app.solver.numerics import (
     sample_meridional_slice,
     sample_polar_disk,
 )
-
 
 # Registry mapping slug → instance. Methods are stateless.
 _METHODS = {
@@ -398,7 +397,7 @@ def _sample_oscillator_density(
 
     total = sp.S.Zero
     for vals in itertools.product(*ranges):
-        term_k = body.subs(dict(zip(syms, vals)))
+        term_k = body.subs(dict(zip(syms, vals, strict=True)))
         if term_k.has(sp.Integral):
             term_k = term_k.doit()
         total = total + term_k

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from app.schemas.solution import DidacticObservation
 
-
 _REGISTRY: dict[str, DidacticObservation] = {
     "sov_why_separable": DidacticObservation(
         kind="intuition",

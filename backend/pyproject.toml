@@ -59,4 +59,16 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B"]
-ignore = ["E501"]
+# E501: long lines (math-heavy code needs them);
+# B008: FastAPI uses Depends(), File(), etc. as default args (idiomatic).
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# Late binding in tight integration callbacks consumed immediately by
+# scipy.quad — the loop variables are captured by intent, not by accident.
+"app/solver/pipeline.py" = ["B023"]
+"app/solver/numerics.py" = ["B023"]
+# Pedagogical tests sometimes compute intermediate quantities to document
+# the chain of reasoning even when not asserted, and use zip() over equal-
+# length lists where strict= adds noise without value.
+"tests/**" = ["F841", "B905", "B023"]

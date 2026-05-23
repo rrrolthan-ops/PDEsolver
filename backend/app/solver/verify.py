@@ -43,8 +43,6 @@ def verify_heat_solution(
     We extract a single term of the series, check it satisfies the PDE
     pointwise, and verify the boundary / initial conditions.
     """
-    n = sp.Symbol("n", integer=True, positive=True)
-
     # Reach into the Sum to get the generic n-th term.
     if isinstance(solution_expr, sp.Sum):
         term = solution_expr.function

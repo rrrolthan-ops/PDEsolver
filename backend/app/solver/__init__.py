@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from .pipeline import solve  # noqa: F401  (typing only)
 
 
-def solve(problem: "PDEProblem") -> "SolutionResponse":  # type: ignore[no-redef]
+def solve(problem: PDEProblem) -> SolutionResponse:  # type: ignore[no-redef]
     """Lazy facade over `app.solver.pipeline.solve` to avoid circular imports."""
     from .pipeline import solve as _solve  # local import breaks the cycle
     return _solve(problem)
