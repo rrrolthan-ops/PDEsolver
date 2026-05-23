@@ -1906,6 +1906,94 @@ def T_schrodinger_free_final_formula() -> str:
 
 
 # ===========================================================================
+# Duhamel (heat equation with source on the real line)
+# ===========================================================================
+
+def T_statement_duhamel() -> str:
+    return (
+        "Resolvemos la **ecuación del calor inhomogénea** en la recta:\n\n"
+        "$$u_t = \\alpha^2\\, u_{xx} + f(x, t), "
+        "\\quad x \\in \\mathbb{R},\\ t > 0,\\qquad "
+        "u(x, 0) = u_0(x).$$\n\n"
+        "Generaliza el problema homogéneo $u_t = \\alpha^2 u_{xx}$ que "
+        "resolvimos con Fourier: ahora la EDP tiene un **término fuente** "
+        "$f(x, t)$ que inyecta (o extrae) calor en cada instante. La "
+        "**linealidad** de la EDP nos permite separar el efecto del "
+        "dato inicial del efecto del forzamiento — el corazón del "
+        "**principio de Duhamel**."
+    )
+
+
+def T_duhamel_method_choice() -> str:
+    return (
+        "**Principio de Duhamel: superposición continua.** La idea es "
+        "**descomponer la fuente $f(x, t)$ como una superposición de "
+        "fuentes instantáneas** $f(\\cdot, s)\\,\\delta(t - s)$ para "
+        "$s \\in [0, t]$, resolver el efecto de cada una, y sumar:\n\n"
+        "1. **Respuesta a la CI sola** ($f = 0$): es Fourier-en-recta, "
+        "$u_{\\text{hom}}(x, t) = (u_0 * G(\\cdot, t))(x)$ con el núcleo "
+        "de Gauss.\n"
+        "2. **Respuesta a una fuente instantánea** en el tiempo $s$ "
+        "con perfil espacial $f(y, s)$: para $t > s$, evoluciona como "
+        "el calor con dato inicial $f(\\cdot, s)$ durante un tiempo "
+        "$t - s$. Es $(f(\\cdot, s) * G(\\cdot, t - s))(x)$.\n"
+        "3. **Suma sobre todas las fuentes instantáneas** integrando "
+        "en $s \\in [0, t]$.\n\n"
+        "**Por qué funciona.** La superposición es legítima porque la "
+        "EDP es **lineal**: la solución de cada \"pieza\" se suma sin "
+        "interferencia. El delta de Dirac que separa $f$ en pulsos "
+        "instantáneos es el truco distribucional que cierra la "
+        "construcción rigurosamente."
+    )
+
+
+def T_duhamel_formula() -> str:
+    return (
+        "Combinando la solución homogénea y la integral de Duhamel:\n\n"
+        "$$\\boxed{\\; u(x, t) = \\underbrace{\\int_{-\\infty}^{\\infty} "
+        "G(x - y, t)\\, u_0(y)\\, dy}_{u_{\\text{homogénea}}} "
+        "+ \\underbrace{\\int_0^t \\!\\!\\int_{-\\infty}^{\\infty} "
+        "G(x - y, t - s)\\, f(y, s)\\, dy\\, ds}_{u_{\\text{forzamiento}}}, \\;}$$\n\n"
+        "donde $G(x, t) = \\frac{1}{\\sqrt{4\\pi \\alpha^2 t}}\\, "
+        "e^{-x^2/(4\\alpha^2 t)}$ es el **núcleo de Gauss** que ya "
+        "conocemos del problema homogéneo. La fórmula admite una "
+        "interpretación operacional muy limpia:\n\n"
+        "- $u_{\\text{hom}}$ es la convolución del **dato inicial** con "
+        "el núcleo al tiempo $t$.\n"
+        "- $u_{\\text{forz}}$ es una **convolución cuádruple** (en "
+        "$x \\leftrightarrow y$ espacial y $0 \\leftrightarrow t$ temporal "
+        "contra $s$) del forzamiento con el mismo núcleo, **donde la "
+        "edad efectiva de la fuente $s$ es $t - s$**.\n\n"
+        "Notación compacta: $u = G(\\cdot, t) * u_0 + "
+        "\\int_0^t G(\\cdot, t-s) * f(\\cdot, s)\\, ds$."
+    )
+
+
+def T_duhamel_intuition() -> str:
+    return (
+        "**Tres lecturas físicas e intuitivas:**\n\n"
+        "- **Memoria con olvido gaussiano.** Una fuente que actuó en "
+        "el tiempo $s < t$ contribuye al estado actual $u(\\cdot, t)$ "
+        "con un peso $G(\\cdot, t - s)$: el calor inyectado se ha "
+        "**propagado y difundido** durante un tiempo $t - s$. Las "
+        "fuentes muy antiguas ($t - s$ grande) tienen contribución "
+        "muy esparcida y atenuada — el sistema **olvida** "
+        "exponencialmente.\n"
+        "- **Causalidad explícita.** La integral en $s$ va de $0$ a "
+        "$t$, **no más allá** de $t$. El estado actual no depende del "
+        "futuro: las fuentes que aún no han actuado no aportan nada. "
+        "Esto es la **flecha del tiempo termodinámica** codificada en "
+        "los límites de integración.\n"
+        "- **Una sola función de Green hace todo el trabajo.** $G$ es "
+        "la **función de Green del operador** $\\partial_t - "
+        "\\alpha^2 \\partial_x^2$ con dato inicial delta y dato fuente "
+        "delta — y aparece exactamente en los dos lugares de la "
+        "fórmula. Es el patrón unificador entre Duhamel y la "
+        "función de Green clásica."
+    )
+
+
+# ===========================================================================
 # Burgers (inviscid) — characteristics + shocks
 # ===========================================================================
 

@@ -40,6 +40,7 @@ independientemente del modo de entrada.
 |---|---|---|---|
 | Calor `u_t = α² u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `separation_of_variables` |
 | Calor `u_t = α² u_xx` | `x ∈ ℝ` | Transformada de Fourier / núcleo de Gauss | `fourier_heat_line` |
+| Calor inhomogéneo `u_t = α² u_xx + f(x,t)` | `x ∈ ℝ` | Principio de Duhamel | `duhamel_heat` |
 | Calor `u_t = α² u_xx`, `u(0,t)=h` | `x ∈ [0, ∞)` | Transformada de Laplace en `t` (solución erfc de Stokes) | `laplace_heat_halfline` |
 | Calor `u_t = α²(u_rr + u_r/r)` | disco `r < R` axisimétrico | Bessel-Fourier | `sov_heat_disk` |
 | Onda `u_tt = c² u_xx` | `[0, L]`, Dirichlet 0 | Separación de variables | `sov_wave_1d` |
@@ -60,7 +61,7 @@ independientemente del modo de entrada.
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 | **Cualquier EDP lineal 2°-orden** `A u_{ξ₁ξ₁} + B u_{ξ₁ξ₂} + C u_{ξ₂ξ₂} + … = 0` | dos variables | **Clasificador + forma canónica** (fallback) | `general_second_order` |
 
-**223 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
+**234 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
 visualización**: superficies en `(x, t)` o `(x, y)`, gráficos 1D, o
 cortes meridionales según la geometría.
 

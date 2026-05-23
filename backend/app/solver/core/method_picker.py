@@ -81,6 +81,19 @@ def _looks_like_heat_1d_unbounded(p: PDEProblem) -> bool:
     return any(s in latex for s in heat_shapes) and _is_unbounded_x(p)
 
 
+def _looks_like_duhamel_heat(p: PDEProblem) -> bool:
+    """Heat with a non-trivial source term on the real line — Duhamel."""
+    if not _is_unbounded_x(p):
+        return False
+    if not (p.source_term and p.source_term.strip() not in {"", "0"}):
+        return False
+    if p.equation_kind == "heat":
+        return True
+    latex = p.equation_latex.replace(" ", "").lower()
+    heat_shapes = ("u_t=alpha^2*u_{xx}", "u_t=alpha^2u_{xx}", "u_t=a^2u_{xx}")
+    return any(s in latex for s in heat_shapes)
+
+
 def _is_semi_infinite_x_nonneg(p: PDEProblem) -> bool:
     """x ∈ [0, ∞): lower bound is zero, upper bound is +∞."""
     if p.domain.x is None:
@@ -178,13 +191,29 @@ def _looks_like_laplace_disk(p: PDEProblem) -> bool:
 
 
 def _looks_like_poisson_1d(p: PDEProblem) -> bool:
-    """1D Poisson with a non-zero source on a bounded interval."""
-    if p.equation_kind == "poisson" and _has_1d_interval_domain(p):
+    """1D Poisson with a non-zero source on a *bounded* interval.
+
+    Bounded is essential: the Green's-function solver requires finite
+    Dirichlet endpoints. Unbounded heat with a source routes to Duhamel,
+    and unbounded Laplace with a source has no specific method.
+    """
+    if (
+        p.equation_kind == "poisson"
+        and _has_1d_interval_domain(p)
+        and not _is_unbounded_x(p)
+    ):
         return True
-    # Heuristic from the source_term field alone.
-    if p.source_term and p.source_term.strip() not in {"", "0"} and _has_1d_interval_domain(p):
+    # Heuristic from the source_term field — also requires bounded x.
+    if (
+        p.source_term
+        and p.source_term.strip() not in {"", "0"}
+        and _has_1d_interval_domain(p)
+        and not _is_unbounded_x(p)
+    ):
         latex = p.equation_latex.replace(" ", "").lower()
-        if "u_{xx}" in latex or "u''" in latex:
+        # And exclude time-evolution shapes: pure Poisson is u'' or u_{xx},
+        # without u_t.
+        if ("u_{xx}" in latex or "u''" in latex) and "u_t" not in latex:
             return True
     return False
 
@@ -501,6 +530,32 @@ def _choice_laplace_heat_halfline(_p: PDEProblem | None = None) -> MethodChoice:
             "ruta más rápida si reconoces de antemano la autosimilaridad, "
             "y produce **la misma fórmula**. Pedagógicamente Laplace "
             "tiene la ventaja de no requerir esa intuición previa."
+        ),
+    )
+
+
+def _choice_duhamel_heat(_p: PDEProblem | None = None) -> MethodChoice:
+    return MethodChoice(
+        method_slug="duhamel_heat",
+        rationale_md=(
+            "La EDP tiene un **término fuente** $f(x, t)$ no nulo y el "
+            "dominio es la recta entera. La linealidad permite "
+            "descomponer $u = u_{\\text{hom}} + u_{\\text{forz}}$: la "
+            "parte homogénea se resuelve con Fourier (como en "
+            "`fourier_heat_line`), y la parte forzada se construye con "
+            "el **principio de Duhamel** — superposición continua "
+            "sobre fuentes instantáneas, cada una evolucionada por el "
+            "mismo núcleo gaussiano."
+        ),
+        alternatives_md=(
+            "**Fourier en $x$ aplicado directamente** a la EDP "
+            "inhomogénea daría una EDO no homogénea modal "
+            "$\\partial_t \\hat u = -\\alpha^2 k^2 \\hat u + \\hat f$ "
+            "cuya solución integral en $s$ es **equivalente** a Duhamel "
+            "(integral en $s$ del factor integrante "
+            "$e^{-\\alpha^2 k^2 (t-s)}$, transformada inversa = núcleo "
+            "de Gauss). Pedagógicamente, Duhamel hace explícita la "
+            "interpretación de 'fuente instantánea + relajación'."
         ),
     )
 
@@ -888,6 +943,10 @@ _REGISTRY: list[tuple[Callable[[PDEProblem], bool], Callable[[PDEProblem | None]
     (_looks_like_heat_disk, _choice_heat_disk),
     (_looks_like_laplace_ball, _choice_laplace_ball),
     (_looks_like_heat_halfline, _choice_laplace_heat_halfline),
+    # Duhamel must come BEFORE fourier_heat_line: Duhamel requires
+    # a non-trivial source_term, so the two are disjoint, but ordering
+    # makes the intent explicit and survives later edits.
+    (_looks_like_duhamel_heat, _choice_duhamel_heat),
     (_looks_like_heat_1d_unbounded, _choice_fourier_heat_line),
     (_looks_like_heat_1d, _choice_heat_1d_sov),
     (_looks_like_wave_1d_unbounded, _choice_dalembert),

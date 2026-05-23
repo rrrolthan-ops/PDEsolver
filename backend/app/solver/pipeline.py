@@ -16,6 +16,7 @@ from app.solver.methods.biharmonic_beam import BiharmonicBeam
 from app.solver.methods.burgers import BurgersInviscid
 from app.solver.methods.characteristics import CharacteristicsTransport1D
 from app.solver.methods.dalembert import DAlembertWave1D
+from app.solver.methods.duhamel_heat import DuhamelHeat
 from app.solver.methods.fourier_heat_line import FourierHeatLine
 from app.solver.methods.general_second_order import GeneralSecondOrder
 from app.solver.methods.green_1d import GreensFunction1D
@@ -49,6 +50,7 @@ _METHODS = {
     "sov_wave_1d": SeparationOfVariablesWave1D(),
     "dalembert_wave_1d": DAlembertWave1D(),
     "fourier_heat_line": FourierHeatLine(),
+    "duhamel_heat": DuhamelHeat(),
     "laplace_heat_halfline": LaplaceHeatHalfLine(),
     "sov_laplace_rect": SeparationOfVariablesLaplaceRect(),
     "sov_laplace_disk": SeparationOfVariablesLaplaceDisk(),
@@ -148,6 +150,17 @@ def _sample_for(slug: str, expr: sp.Basic) -> tuple[dict | None, dict | None]:
         # so we can't use the generic `sample_2d` here (it pins
         # `modules="numpy"`). Inline sampler with scipy+numpy modules.
         plot = _sample_laplace_heat_halfline(expr)
+        return plot, None
+
+    if slug == "duhamel_heat":
+        # Sampling the double-convolution numerically is expensive; we
+        # provide a reasonable plot only when the expression is concrete
+        # (substituting α=1) and the integral has separable structure.
+        # Otherwise we return None and the front-end omits the surface.
+        try:
+            plot = _sample_duhamel_heat(expr)
+        except Exception:
+            plot = None
         return plot, None
 
     if slug == "fourier_heat_line":
@@ -444,6 +457,148 @@ def _flatten_sum(expr: sp.Basic) -> tuple[list[tuple[sp.Symbol, int]], sp.Basic]
 # ---------------------------------------------------------------------------
 # Helpers used only by `_sample_for`
 # ---------------------------------------------------------------------------
+
+
+def _sample_duhamel_heat(
+    expr: sp.Basic,
+    *,
+    x_range: tuple[float, float] = (-3.0, 3.0),
+    t_range: tuple[float, float] = (0.05, 1.5),
+    n_grid: tuple[int, int] = (40, 25),
+    quad_limit: float = 12.0,
+) -> dict:
+    """Sample u(x, t) for the Duhamel heat formula.
+
+    The artifact is one or two unevaluated Integrals (homogeneous +
+    forcing). We split the expression into addends and numerically
+    integrate each via ``scipy.integrate.nquad`` after substituting
+    α → 1 and lambdifying the integrand. Single (y) integrals come
+    from the homogeneous part; double (y, s) integrals from the
+    forcing.
+    """
+    import numpy as np
+    from scipy.integrate import quad
+
+    alpha = sp.Symbol("alpha", positive=True)
+    x_sym = sp.Symbol("x", real=True)
+    t_sym = sp.Symbol("t", real=True, nonnegative=True)
+
+    expr_concrete = expr.subs(alpha, 1.0)
+
+    # Decompose into a list of terms (each term carries its own integral).
+    if isinstance(expr_concrete, sp.Add):
+        terms = list(expr_concrete.args)
+    else:
+        terms = [expr_concrete]
+
+    integral_terms: list[sp.Integral] = []
+    constant_terms: list[sp.Basic] = []
+    for term in terms:
+        if isinstance(term, sp.Integral):
+            integral_terms.append(term)
+        else:
+            constant_terms.append(term)
+
+    xs = np.linspace(*x_range, n_grid[0])
+    ts = np.linspace(*t_range, n_grid[1])
+    U = np.zeros((len(ts), len(xs)), dtype=float)
+
+    # Constant terms (no integration needed).
+    if constant_terms:
+        const_total = sum(constant_terms, sp.S.Zero)
+        free = const_total.free_symbols
+        bound = tuple(s for s in (x_sym, t_sym) if s in free)
+        if bound:
+            f = sp.lambdify(bound, const_total, modules=["scipy", "numpy"])
+            X, Tt = np.meshgrid(xs, ts, indexing="xy")
+            if bound == (x_sym, t_sym):
+                U += np.asarray(f(X, Tt), dtype=float)
+            elif bound == (x_sym,):
+                U += np.asarray(f(X), dtype=float)
+            elif bound == (t_sym,):
+                U += np.asarray(f(Tt), dtype=float)
+        else:
+            U += float(const_total)
+
+    # Each integral term: single (y) or double (y, s).
+    for integral in integral_terms:
+        integrand = integral.function
+        limits = integral.limits  # tuple of (var, lower, upper) tuples
+        if len(limits) == 1:
+            y_var, lo, hi = limits[0]
+            g = sp.lambdify(
+                (x_sym, t_sym, y_var), integrand, modules=["scipy", "numpy"]
+            )
+            lo_v = float(lo) if lo not in (-sp.oo, sp.oo) else -quad_limit
+            hi_v = float(hi) if hi not in (-sp.oo, sp.oo) else quad_limit
+            for i, tv in enumerate(ts):
+                for j, xv in enumerate(xs):
+                    try:
+                        val, _ = quad(
+                            lambda yv, xv=xv, tv=tv: g(xv, tv, yv),
+                            lo_v,
+                            hi_v,
+                            limit=60,
+                        )
+                        U[i, j] += val
+                    except Exception:
+                        continue
+        elif len(limits) == 2:
+            # Outer limit listed first by SymPy's Integral; in our
+            # construction we pass (y, ±∞) then (s, 0, t).
+            inner_var, inner_lo, inner_hi = limits[0]
+            outer_var, outer_lo, outer_hi = limits[1]
+            g = sp.lambdify(
+                (x_sym, t_sym, inner_var, outer_var),
+                integrand,
+                modules=["scipy", "numpy"],
+            )
+            lo_in = (
+                float(inner_lo) if inner_lo not in (-sp.oo, sp.oo) else -quad_limit
+            )
+            hi_in = (
+                float(inner_hi) if inner_hi not in (-sp.oo, sp.oo) else quad_limit
+            )
+            for i, tv in enumerate(ts):
+                # Outer integration in s ∈ [0, t]; here outer_hi is t (symbol).
+                s_hi = (
+                    float(tv)
+                    if outer_hi == t_sym
+                    else float(outer_hi)
+                    if outer_hi not in (-sp.oo, sp.oo)
+                    else quad_limit
+                )
+                s_lo = float(outer_lo) if outer_lo not in (-sp.oo, sp.oo) else 0.0
+                if s_hi <= s_lo:
+                    continue
+                for j, xv in enumerate(xs):
+                    def outer(sv, xv=xv, tv=tv):
+                        try:
+                            val, _ = quad(
+                                lambda yv, sv=sv, xv=xv, tv=tv: g(xv, tv, yv, sv),
+                                lo_in,
+                                hi_in,
+                                limit=40,
+                            )
+                            return val
+                        except Exception:
+                            return 0.0
+
+                    try:
+                        # Use a small δ before s = t to avoid the 1/√(t-s)
+                        # singularity in G(·, t-s).
+                        s_hi_safe = max(s_lo, s_hi - 1e-4)
+                        val, _ = quad(outer, s_lo, s_hi_safe, limit=30)
+                        U[i, j] += val
+                    except Exception:
+                        continue
+
+    return {
+        "kind": "surface_xt",
+        "x": xs.tolist(),
+        "t": ts.tolist(),
+        "u": U.tolist(),
+    }
 
 
 def _sample_burgers(

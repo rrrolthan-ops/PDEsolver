@@ -547,6 +547,35 @@ _REGISTRY: dict[str, DidacticObservation] = {
             "información viaja como mucho a velocidad $c$ (cono de luz)."
         ),
     ),
+    "duhamel_superposition": DidacticObservation(
+        kind="theorem",
+        text_md=(
+            "**Principio de Duhamel: linealidad + superposición continua.** "
+            "Para cualquier EDP lineal $\\partial_t u = \\mathcal{L} u + "
+            "f(x, t)$ con $\\mathcal{L}$ operador espacial lineal, la "
+            "solución se descompone como\n\n"
+            "$$u(x, t) = e^{t\\mathcal{L}} u_0 + \\int_0^t "
+            "e^{(t-s)\\mathcal{L}} f(\\cdot, s)\\, ds,$$\n\n"
+            "donde $e^{t\\mathcal{L}}$ es el **semigrupo** asociado "
+            "a $\\mathcal{L}$ (para el calor: convolución con $G$; para "
+            "la onda: la combinación de D'Alembert; para Schrödinger: "
+            "convolución con el propagador libre). La fórmula es **universal** "
+            "para EDPs evolutivas lineales con fuente."
+        ),
+    ),
+    "duhamel_causality": DidacticObservation(
+        kind="intuition",
+        text_md=(
+            "**Causalidad: el límite superior de integración es $t$.** "
+            "La fuente sólo aporta al estado actual mientras lleva "
+            "actuando en el pasado: $s \\in [0, t]$. Las fuentes "
+            "**futuras** ($s > t$) no aparecen. Esta es la "
+            "**asimetría temporal** de las EDPs parabólicas, que "
+            "contrasta con las elípticas (Poisson en $\\mathbb{R}^n$ "
+            "depende globalmente del dato) y respeta la flecha del "
+            "tiempo termodinámica."
+        ),
+    ),
     "burgers_self_steepening": DidacticObservation(
         kind="intuition",
         text_md=(
