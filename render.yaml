@@ -19,12 +19,22 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false   # set this in the Render dashboard, don't commit it.
       - key: DATABASE_URL
-        value: sqlite:///./data/pdesolver.db
+        # On the FREE plan Render does not allow persistent disks, so
+        # we put the SQLite file under /tmp (writable but ephemeral).
+        # The library tab still works during a session; it just gets
+        # wiped when the container restarts.
+        #
+        # To persist across restarts: upgrade this service to the
+        # Starter plan ($7/mo) and uncomment the `disk:` block below,
+        # replacing this value with `sqlite:///./data/pdesolver.db`.
+        value: sqlite:////tmp/pdesolver.db
     healthCheckPath: /health
-    disk:
-      name: data
-      mountPath: /opt/render/project/src/backend/data
-      sizeGB: 1
+    # Persistent disk — available only on paid plans. Uncomment to
+    # restore library persistence after upgrading from free.
+    # disk:
+    #   name: data
+    #   mountPath: /opt/render/project/src/backend/data
+    #   sizeGB: 1
 
   - type: web
     name: pdesolver-frontend
