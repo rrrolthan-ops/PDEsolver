@@ -40,7 +40,8 @@ services:
     name: pdesolver-frontend
     runtime: static
     rootDir: frontend
-    plan: free
+    # Static sites don't take a `plan` field — they have their own
+    # pricing model (build minutes + bandwidth, free tier generous).
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     envVars:
