@@ -16,8 +16,19 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.10
-      - key: ANTHROPIC_API_KEY
-        sync: false   # set this in the Render dashboard, don't commit it.
+      # ANTHROPIC_API_KEY is intentionally NOT declared here so Render
+      # doesn't block Apply asking the user to provide a value.
+      #
+      # The backend handles its absence gracefully:
+      #   * Manual LaTeX input → fully functional.
+      #   * Natural-language input → deterministic templates work
+      #     ("ecuación del calor en una barra…"). LLM fallback is
+      #     disabled (returns 503 with a clear message).
+      #   * Image upload → disabled (returns 503).
+      #
+      # If you later want the LLM-backed features, add the variable
+      # manually in the Render dashboard: backend service →
+      # Environment → Add Environment Variable.
       - key: DATABASE_URL
         # On the FREE plan Render does not allow persistent disks, so
         # we put the SQLite file under /tmp (writable but ephemeral).
