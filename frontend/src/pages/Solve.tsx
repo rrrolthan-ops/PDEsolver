@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useI18n } from "../i18n/useI18n";
 import { saveLibraryEntry, solveProblem } from "../api/client";
 import type {
   BoundaryCondition,
@@ -43,6 +44,7 @@ interface Props {
 }
 
 export function Solve({ mode }: Props) {
+  const { t } = useI18n();
   // Manual editor state.
   const [equation, setEquation] = useState(DEFAULT_PROBLEM.equation_latex);
   const [xLow, setXLow] = useState("0");
@@ -255,20 +257,17 @@ export function Solve({ mode }: Props) {
         {leftPanel}
 
         <section className="panel">
-          <h2>Vista previa</h2>
+          <h2>{t("solve.preview")}</h2>
           {loading ? (
             <div className="preview-skeleton" role="status" aria-live="polite">
-              <LoadingSpinner
-                showHint
-                label="Resolviendo el problema…"
-              />
+              <LoadingSpinner showHint label={t("solve.loading")} />
               <div className="preview-skeleton-block short" />
               <div className="preview-skeleton-block" />
               <div className="preview-skeleton-block tall" />
             </div>
           ) : result?.solution_latex ? (
             <>
-              <div className="field-label">Solución final</div>
+              <div className="field-label">{t("solve.solution.label")}</div>
               <div className="latex-block">
                 <code style={{ fontSize: 13 }}>{result.solution_latex}</code>
               </div>
@@ -280,10 +279,10 @@ export function Solve({ mode }: Props) {
           ) : (
             <p style={{ color: "var(--text-muted)" }}>
               {mode === "image"
-                ? "Sube una foto del problema. Verás la imagen y la transcripción lado a lado para confirmar antes de resolver."
+                ? t("solve.preview.empty.image")
                 : mode === "natural"
-                  ? "Describe el problema a la izquierda y pulsa Interpretar. Después podrás confirmar la interpretación antes de resolver."
-                  : "Configura el problema a la izquierda y pulsa Resolver. Verás la solución, la superficie u(x, t) y la convergencia."}
+                  ? t("solve.preview.empty.natural")
+                  : t("solve.preview.empty.write")}
             </p>
           )}
         </section>
@@ -292,7 +291,7 @@ export function Solve({ mode }: Props) {
       {error && (
         <div className="error-banner" role="alert" data-testid="error-banner">
           <div>
-            <strong>Error al resolver:</strong> {error}
+            <strong>{t("solve.error")}</strong> {error}
           </div>
           <button
             type="button"
@@ -307,7 +306,7 @@ export function Solve({ mode }: Props) {
               marginLeft: 12,
             }}
           >
-            Cerrar
+            {t("solve.error.close")}
           </button>
         </div>
       )}
@@ -330,17 +329,17 @@ export function Solve({ mode }: Props) {
               }}
             >
               {saveStatus === "saving"
-                ? "Guardando…"
+                ? t("btn.saving")
                 : saveStatus === "saved"
-                  ? "Guardado ✓"
-                  : "Guardar en biblioteca"}
+                  ? t("btn.saved")
+                  : t("btn.saveLibrary")}
             </button>
             <button
               type="button"
               className="solve-button"
               onClick={handleExportPdf}
             >
-              Exportar a PDF
+              {t("btn.exportPdf")}
             </button>
             {saveMessage && (
               <span
@@ -357,7 +356,7 @@ export function Solve({ mode }: Props) {
             )}
           </div>
           <h2 style={{ fontFamily: "var(--font-ui)" }}>
-            Desarrollo paso a paso
+            {t("solve.steps.heading")}
           </h2>
           {visibleSteps.map((step, i) => (
             <StepCard key={i} step={step} />
@@ -392,6 +391,7 @@ interface ManualEditorProps {
 }
 
 function ManualEditorPanel(props: ManualEditorProps) {
+  const { t } = useI18n();
   return (
     <section className="panel">
       <h2>Planteamiento del problema</h2>
@@ -449,7 +449,7 @@ function ManualEditorPanel(props: ManualEditorProps) {
         onClick={props.onSolve}
         disabled={props.loading}
       >
-        {props.loading ? "Resolviendo…" : "Resolver con explicación detallada"}
+        {props.loading ? t("btn.solving") : t("btn.solve")}
       </button>
     </section>
   );

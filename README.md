@@ -62,7 +62,7 @@ independientemente del modo de entrada.
 | Biarmónica `EI u'''' = q(x)` | viga `[0, L]` apoyo simple | Expansión en senos | `biharmonic_beam` |
 | **Cualquier EDP lineal 2°-orden** `A u_{ξ₁ξ₁} + B u_{ξ₁ξ₂} + C u_{ξ₂ξ₂} + … = 0` | dos variables | **Clasificador + forma canónica** (fallback) | `general_second_order` |
 
-**245 tests pasando** (`pytest -v`). **Cada método del repertorio tiene
+**245 tests backend + 32 tests frontend** (`pytest -v` / `npm test`) + smoke tests E2E con Playwright (`npm run test:e2e`). UI con switcher es/en. **Cada método del repertorio tiene
 visualización**: superficies en `(x, t)` o `(x, y)`, gráficos 1D, o
 cortes meridionales según la geometría.
 

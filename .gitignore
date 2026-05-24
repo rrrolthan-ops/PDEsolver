@@ -35,6 +35,11 @@ data/
 .DS_Store
 Thumbs.db
 
+# Playwright
+frontend/playwright-report/
+frontend/test-results/
+frontend/.playwright/
+
 # Project-specific
 backend/uploads/
 backend/data/
