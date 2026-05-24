@@ -67,6 +67,10 @@ jobs:
         working-directory: frontend
         run: npx tsc -b --noEmit
 
+      - name: Vitest (component tests)
+        working-directory: frontend
+        run: npm test
+
       - name: Build production bundle
         working-directory: frontend
         run: npm run build

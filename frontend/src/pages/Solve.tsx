@@ -14,6 +14,7 @@ import { HeatPlot } from "../components/HeatPlot";
 import { ImageUpload } from "../components/ImageUpload";
 import { KatexBlock } from "../components/KatexBlock";
 import { LatexEditor } from "../components/LatexEditor";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 import { NaturalLanguageInput } from "../components/NaturalLanguageInput";
 import { StepCard } from "../components/StepCard";
 
@@ -255,7 +256,17 @@ export function Solve({ mode }: Props) {
 
         <section className="panel">
           <h2>Vista previa</h2>
-          {result?.solution_latex ? (
+          {loading ? (
+            <div className="preview-skeleton" role="status" aria-live="polite">
+              <LoadingSpinner
+                showHint
+                label="Resolviendo el problema…"
+              />
+              <div className="preview-skeleton-block short" />
+              <div className="preview-skeleton-block" />
+              <div className="preview-skeleton-block tall" />
+            </div>
+          ) : result?.solution_latex ? (
             <>
               <div className="field-label">Solución final</div>
               <div className="latex-block">
@@ -279,8 +290,25 @@ export function Solve({ mode }: Props) {
       </div>
 
       {error && (
-        <div className="error-banner" role="alert">
-          <strong>Error al resolver:</strong> {error}
+        <div className="error-banner" role="alert" data-testid="error-banner">
+          <div>
+            <strong>Error al resolver:</strong> {error}
+          </div>
+          <button
+            type="button"
+            className="solve-button"
+            onClick={() => setError(null)}
+            style={{
+              background: "transparent",
+              color: "var(--accent)",
+              border: "1px solid var(--accent)",
+              padding: "4px 12px",
+              fontSize: 13,
+              marginLeft: 12,
+            }}
+          >
+            Cerrar
+          </button>
         </div>
       )}
 

@@ -462,3 +462,64 @@ html, body {
   }
 }
 
+
+/* ---------------------------------------------------------------- */
+/* Loading spinner                                                  */
+/* ---------------------------------------------------------------- */
+.loading-spinner-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+.loading-spinner-label {
+  color: var(--text);
+}
+.loading-spinner-hint {
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: 13px;
+  /* Smooth crossfade-ish (no animation chain — let the text swap). */
+  transition: opacity 200ms ease;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Skeleton placeholder for the preview panel */
+.preview-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+.preview-skeleton-block {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 0%,
+    var(--border) 50%,
+    var(--surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 4px;
+  height: 14px;
+}
+.preview-skeleton-block.tall { height: 200px; }
+.preview-skeleton-block.short { width: 60%; }
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
