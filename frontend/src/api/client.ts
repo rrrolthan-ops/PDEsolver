@@ -7,7 +7,24 @@ import type {
   VisionExtractionResult,
 } from "./types";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+/**
+ * Resolve the backend base URL.
+ *
+ * - In dev: defaults to `http://localhost:8000`.
+ * - In cloud deploys (e.g. Render's blueprint `fromService` property
+ *   returns just the hostname `pdesolver-backend.onrender.com`), we
+ *   transparently prepend `https://` so the user doesn't have to
+ *   remember to include the scheme.
+ * - A user-supplied value with an explicit scheme is left intact.
+ */
+function resolveBaseUrl(): string {
+  const raw = import.meta.env.VITE_API_BASE_URL;
+  if (!raw) return "http://localhost:8000";
+  if (/^https?:\/\//.test(raw)) return raw;
+  return `https://${raw}`;
+}
+
+const BASE_URL = resolveBaseUrl();
 
 export interface NaturalLanguageParseResponse {
   problem: PDEProblem;
