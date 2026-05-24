@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -31,11 +32,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# In production behind a reverse proxy this would be tightened.
-# For local dev we allow the Vite dev server.
+# CORS origins: the local Vite dev server is always allowed; additional
+# origins can be appended via the `CORS_ORIGINS` env var (comma-separated).
+# This keeps the dev experience zero-config while letting deployment
+# environments add their public domain without a code change.
+_default_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+_extra_origins = [
+    o.strip()
+    for o in os.environ.get("CORS_ORIGINS", "").split(",")
+    if o.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=_default_origins + _extra_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

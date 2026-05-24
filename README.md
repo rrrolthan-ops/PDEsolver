@@ -138,6 +138,17 @@ Abre http://localhost:5173.
 docker compose up --build
 ```
 
+### Despliegue en la nube
+
+Para producción (Docker prod, Render.com, Vercel/Railway, VPS), ver
+**[`DEPLOY.md`](./DEPLOY.md)**. Incluye:
+
+- Multi-stage Dockerfiles (`docker/backend.prod.Dockerfile`, `docker/frontend.prod.Dockerfile`)
+- `docker-compose.prod.yml` con healthcheck y nginx
+- `render.yaml` para despliegue automático
+- Configuración de CORS para el dominio público
+- Checklist pre-despliegue
+
 ## Cómo probar los métodos
 
 ### Lenguaje natural

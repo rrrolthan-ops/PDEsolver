@@ -1,0 +1,47 @@
+# Production stack: docker compose -f docker-compose.prod.yml up -d
+# Differences from docker-compose.yml (dev):
+# - Uses *.prod.Dockerfile (multi-stage, no dev deps, non-root)
+# - Frontend serves the built bundle via nginx on :80
+# - No volume mounts of source code (image is self-contained)
+# - Restart policies for unattended operation
+# - Healthcheck on the backend /health endpoint
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.prod.Dockerfile
+    container_name: pdesolver-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./data/pdesolver.db
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - backend_data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend.prod.Dockerfile
+      args:
+        # Override at build time:
+        #   VITE_API_BASE_URL=https://api.example.com docker compose ... build
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    container_name: pdesolver-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  backend_data:

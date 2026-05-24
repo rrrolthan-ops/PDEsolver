@@ -1,0 +1,46 @@
+# Render.com infrastructure-as-code spec.
+# Deploy by pointing a Render Blueprint at this repo:
+#   https://dashboard.render.com → New → Blueprint
+#
+# The two services are linked: the frontend's build picks up the
+# backend's public URL via the `fromService` env var.
+
+services:
+  - type: web
+    name: pdesolver-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -e .
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.10
+      - key: ANTHROPIC_API_KEY
+        sync: false   # set this in the Render dashboard, don't commit it.
+      - key: DATABASE_URL
+        value: sqlite:///./data/pdesolver.db
+    healthCheckPath: /health
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/backend/data
+      sizeGB: 1
+
+  - type: web
+    name: pdesolver-frontend
+    runtime: static
+    rootDir: frontend
+    plan: free
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          name: pdesolver-backend
+          type: web
+          property: host
+    routes:
+      # SPA fallback so client-side routing works.
+      - type: rewrite
+        source: /*
+        destination: /index.html
